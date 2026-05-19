@@ -1303,7 +1303,7 @@ RULES:
           content.push({ text: prompt });
 
           // Gemini API call
-          const MODEL = "gemini-1.5-flash"; // ← change model here if needed
+          const MODEL = "gemini-2.5-flash"; // Active stable model per current Gemini docs
           const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
 
           const body = {
@@ -1326,7 +1326,11 @@ RULES:
           }
 
           const data = await res.json();
-          let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+          let raw =
+            data?.candidates?.[0]?.content?.parts
+              ?.map((part) => part?.text || "")
+              .join("\n")
+              .trim() || "";
 
           // Strip markdown fences if Gemini wrapped it
           raw = raw
