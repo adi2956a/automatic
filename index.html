@@ -714,7 +714,10 @@ RULES:
           return;
         }
 
-        if (GEMINI_API_KEY === "AIzaSyBFQNtsAkUdU2V5DAVfY5h4gfIgqSHCJGo") {
+        if (
+          !GEMINI_API_KEY ||
+          GEMINI_API_KEY === "YOUR_REAL_GEMINI_API_KEY_HERE"
+        ) {
           alert(
             "Please open the file script and configure your real 'GEMINI_API_KEY' variable first.",
           );
