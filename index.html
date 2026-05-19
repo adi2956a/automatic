@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Component Preview Sandbox</title>
+    <!-- Tailwind CSS for modern layout UI -->
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 h-screen flex flex-col font-sans">
+
+    <!-- Header Panel -->
+    <header class="bg-gray-800 border-b border-gray-700 p-4 flex justify-between items-center shadow-md">
+        <h1 class="text-xl font-bold tracking-wide text-cyan-400">⚡ Gemini HTML Render Sandbox</h1>
+        <span class="text-xs bg-gray-700 text-gray-400 px-3 py-1 rounded-full">Model: gemini-2.5-flash</span>
+    </header>
+
+    <!-- Main Workspace Dashboard -->
+    <main class="flex-1 flex overflow-hidden">
+        
+        <!-- Left Side Panel: User Controls -->
+        <div class="w-1/3 p-6 flex flex-col bg-gray-850 border-r border-gray-700 gap-4">
+            <div class="flex flex-col">
+                <label class="text-sm font-semibold text-gray-400 mb-2">System Status:</label>
+                <div class="bg-gray-800 border border-gray-700 rounded p-3 text-xs text-yellow-500 italic">
+                    "The backend prompt is hardcoded in the script source. Users cannot view or edit it."
+                </div>
+            </div>
+
+            <div class="flex-1 flex flex-col">
+                <label for="userInput" class="text-sm font-semibold text-gray-400 mb-2">What component do you want to generate?</label>
+                <textarea id="userInput" 
+                    placeholder="e.g., A sleek dark mode login page with glowing blue borders and input animations..." 
+                    class="w-full flex-1 p-3 bg-gray-800 border border-gray-700 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-cyan-500 resize-none transition-colors"></textarea>
+            </div>
+
+            <button id="generateBtn" onclick="generateAndRenderHTML()" 
+                class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 px-4 rounded transition-all shadow-lg active:scale-[0.98]">
+                Generate & Run Component
+            </button>
+        </div>
+
+        <!-- Right Side Panel: Live Browser Sandbox Render -->
+        <div class="w-2/3 p-6 flex flex-col bg-gray-950 h-full">
+            <label class="text-sm font-semibold text-gray-400 mb-2">Live Live-Chrome Viewport Output:</label>
+            <div class="flex-1 bg-white rounded-lg overflow-hidden shadow-2xl relative border border-gray-800">
+                <!-- An iframe dynamically receives and executes the generated code instantly -->
+                <iframe id="outputFrame" class="w-full h-full bg-white" sandbox="allow-scripts"></iframe>
+                
+                <!-- Loading HUD State Overlay -->
+                <div id="loader" class="hidden absolute inset-0 bg-gray-950/80 flex items-center justify-center backdrop-blur-sm">
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-sm font-medium text-cyan-400 tracking-wider">Gemini is compiling source code...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Import modern Gemini SDK module directly -->
+    <script type="module">
+        import { GoogleGenAI } from '[https://esm.run/@google/genai](https://esm.run/@google/genai)';
+
+        // 1. Setup your API credentials securely
+        const API_KEY = "AIzaSyBGpbikTPUYdKGr_HMRfntLXuOoPoRCc5Q"; 
+        const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+        // 2. Define the hidden structural prompt rule inside the UI execution engine
+        const FIXED_SYSTEM_PROMPT = `
+        You are an expert frontend system component developer. Your absolute directive is to output complete, production-ready, functional layouts.
+        
+        CRITICAL RULES:
+        1. Return ONLY the structural valid raw code.
+        2. Do NOT wrap your output in markdown syntax (No markdown backticks like \`\`\`html).
+        3. Make the interface beautiful, highly responsive, and include interactive embedded JavaScript logic if required for structural elements (tabs, menus, modal pops).
+        4. Use CDN script links for styling libraries if necessary (e.g. Tailwind via <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>).
+        `;
+
+        window.generateAndRenderHTML = async function() {
+            const userInput = document.getElementById('userInput').value.trim();
+            const generateBtn = document.getElementById('generateBtn');
+            const loader = document.getElementById('loader');
+            const outputFrame = document.getElementById('outputFrame');
+
+            if (!userInput) {
+                alert("Please describe a UI component first.");
+                return;
+            }
+
+            // UI feedback loading animations trigger
+            generateBtn.disabled = true;
+            loader.classList.remove('hidden');
+
+            try {
+                // Execute the generation via the lightweight Flash model
+                const response = await ai.models.generateContent({
+                    model: 'gemini-2.5-flash',
+                    contents: `System Directive: ${FIXED_SYSTEM_PROMPT} \n\nUser Design Request: ${userInput}`,
+                });
+
+                let cleanHtmlCode = response.text;
+
+                // Absolute Fail-Safe: If markdown symbols accidentally bypass generation configs, clean them instantly.
+                if (cleanHtmlCode.includes("```html")) {
+                    cleanHtmlCode = cleanHtmlCode.split("```html")[1].split("
+```")[0];
+                } else if (cleanHtmlCode.includes("```")) {
+                    cleanHtmlCode = cleanHtmlCode.split("
+```")[1].split("```")[0];
+                }
+
+                // Inject the raw code payload directly inside the sandbox frame target
+                const doc = outputFrame.contentWindow.document;
+                doc.open();
+                doc.write(cleanHtmlCode);
+                doc.close();
+
+            } catch (error) {
+                console.error("Gemini Frame compilation dropped:", error);
+                alert("Failed compiling elements. Check developer logs or check your API validation key configurations.");
+            } finally {
+                // Return interface interaction permissions
+                generateBtn.disabled = false;
+                loader.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
