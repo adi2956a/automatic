@@ -3,48 +3,610 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI HTML Generator & Runner</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>News Card Generator — anjaniya.in</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap"
+      rel="stylesheet" />
     <style>
+      /* ─── TOKENS ─────────────────────────────────────── */
+      :root {
+        --bg: #0d0f11;
+        --surface: #141618;
+        --card: #1a1d20;
+        --border: #2a2d31;
+        --accent: #e8531a;
+        --accent2: #f5a623;
+        --text: #f0ede8;
+        --muted: #8a8784;
+        --dim: #444;
+        --radius: 10px;
+        --font-head: "Bebas Neue", sans-serif;
+        --font-body: "DM Sans", sans-serif;
+        --font-mono: "JetBrains Mono", monospace;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
       body {
-        background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-body);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ─── NOISE OVERLAY ──────────────────────────────── */
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      /* ─── HEADER ─────────────────────────────────────── */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 18px 32px;
+        border-bottom: 1px solid var(--border);
+        position: relative;
+        z-index: 1;
+      }
+      .logo {
+        font-family: var(--font-head);
+        font-size: 26px;
+        letter-spacing: 2px;
+        color: var(--text);
+      }
+      .logo span {
+        color: var(--accent);
+      }
+      .badge {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        background: var(--accent);
+        color: #fff;
+        padding: 3px 10px;
+        border-radius: 20px;
+        letter-spacing: 1px;
+      }
+
+      /* ─── MAIN LAYOUT ────────────────────────────────── */
+      main {
+        flex: 1;
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 0;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ─── LEFT PANEL ─────────────────────────────────── */
+      .panel {
+        background: var(--surface);
+        border-right: 1px solid var(--border);
+        padding: 28px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 22px;
+        overflow-y: auto;
+      }
+      .section-label {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--accent);
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+      }
+      .field-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 600;
+        letter-spacing: 0.5px;
+      }
+      textarea,
+      select,
+      input[type="text"] {
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: var(--radius);
+        padding: 10px 14px;
+        font-family: var(--font-body);
+        font-size: 13px;
+        resize: vertical;
+        transition: border 0.2s;
+        width: 100%;
+      }
+      textarea:focus,
+      select:focus,
+      input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      textarea {
+        min-height: 90px;
+      }
+
+      /* image upload */
+      .upload-zone {
+        border: 1.5px dashed var(--dim);
+        border-radius: var(--radius);
+        padding: 22px;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border 0.2s,
+          background 0.2s;
+        position: relative;
+      }
+      .upload-zone:hover {
+        border-color: var(--accent);
+        background: rgba(232, 83, 26, 0.05);
+      }
+      .upload-zone input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+      }
+      .upload-zone .icon {
+        font-size: 26px;
+        margin-bottom: 6px;
+      }
+      .upload-zone p {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .upload-zone.has-img {
+        border-color: var(--accent2);
+      }
+      #img-preview {
+        width: 100%;
+        border-radius: 8px;
+        margin-top: 10px;
+        display: none;
+        max-height: 160px;
+        object-fit: cover;
+      }
+
+      /* divider */
+      .divider {
+        border: none;
+        border-top: 1px solid var(--border);
+        margin: 4px 0;
+      }
+
+      /* prompt preview toggle */
+      .prompt-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--muted);
+        cursor: pointer;
+        user-select: none;
+      }
+      .prompt-toggle input {
+        accent-color: var(--accent);
+      }
+      #prompt-box {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 12px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--muted);
+        max-height: 120px;
+        overflow-y: auto;
+        line-height: 1.6;
+        display: none;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      /* generate button */
+      .btn-generate {
+        background: var(--accent);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius);
+        padding: 14px;
+        font-family: var(--font-head);
+        font-size: 20px;
+        letter-spacing: 2px;
+        cursor: pointer;
+        transition:
+          background 0.2s,
+          transform 0.1s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+      .btn-generate:hover {
+        background: #d44a10;
+      }
+      .btn-generate:active {
+        transform: scale(0.98);
+      }
+      .btn-generate:disabled {
+        background: var(--dim);
+        cursor: not-allowed;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.7s linear infinite;
+        display: none;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* status */
+      #status {
+        font-size: 12px;
+        text-align: center;
+        padding: 6px;
+        border-radius: 6px;
+        display: none;
+      }
+      #status.ok {
+        background: rgba(26, 107, 47, 0.25);
+        color: #5ecf7e;
+      }
+      #status.err {
+        background: rgba(196, 57, 10, 0.25);
+        color: #f07050;
+      }
+
+      /* ─── RIGHT PANEL — PREVIEW ──────────────────────── */
+      .preview-area {
+        display: flex;
+        flex-direction: column;
+      }
+      .preview-toolbar {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .preview-toolbar span {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--muted);
+        flex: 1;
+      }
+      .btn-sm {
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: 6px;
+        padding: 7px 14px;
+        font-family: var(--font-body);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition:
+          background 0.15s,
+          border 0.15s;
+        white-space: nowrap;
+      }
+      .btn-sm:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .btn-sm.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      .btn-sm.primary:hover {
+        background: #d44a10;
+      }
+      .btn-sm:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .preview-frame {
+        flex: 1;
+        background: #edeae4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: auto;
+        padding: 30px;
+      }
+      #render-iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        background: transparent;
+      }
+
+      .empty-state {
+        text-align: center;
+        color: var(--dim);
+      }
+      .empty-state .big {
+        font-size: 52px;
+        margin-bottom: 12px;
+      }
+      .empty-state p {
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      /* ─── API KEY MODAL ──────────────────────────────── */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+        backdrop-filter: blur(4px);
+      }
+      .modal-overlay.hidden {
+        display: none;
+      }
+      .modal {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 32px;
+        width: 440px;
+        max-width: 90vw;
+      }
+      .modal h2 {
+        font-family: var(--font-head);
+        font-size: 28px;
+        margin-bottom: 6px;
+      }
+      .modal p {
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 20px;
+        line-height: 1.6;
+      }
+      .modal input {
+        width: 100%;
+        background: var(--bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        border-radius: var(--radius);
+        padding: 12px 14px;
+        font-family: var(--font-mono);
+        font-size: 13px;
+        margin-bottom: 14px;
+      }
+      .modal input:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+      .modal-note {
+        font-size: 11px;
+        color: var(--dim);
+        margin-bottom: 18px;
+        line-height: 1.5;
+      }
+      .modal-note a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      /* ─── RESPONSIVE ─────────────────────────────────── */
+      @media (max-width: 800px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+        .preview-area {
+          min-height: 60vh;
+        }
       }
     </style>
   </head>
-  <body
-    class="text-slate-100 min-h-screen flex flex-col justify-between font-sans">
-    <!-- Header -->
-    <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur p-4">
-      <div class="max-w-5xl mx-auto flex justify-between items-center">
-        <h1
-          class="text-xl font-bold bg-gradient-to-r from-cyan-400 to-fuchsia-500 bg-clip-text text-transparent">
-          PromptToWeb Studio
-        </h1>
+  <body>
+    <!-- ── API KEY MODAL ──────────────────────────────────────── -->
+    <div class="modal-overlay" id="api-modal">
+      <div class="modal">
+        <h2>Enter <span style="color: var(--accent)">API Key</span></h2>
+        <p>
+          Your Gemini API key is stored only in your browser (localStorage) and
+          never sent anywhere except Google's API directly.
+        </p>
+        <input type="password" id="api-key-input" placeholder="AIza..." />
+        <p class="modal-note">
+          Get a free key at
+          <a href="https://aistudio.google.com/app/apikey" target="_blank"
+            >aistudio.google.com</a
+          >.<br />
+          Key is saved in your browser. You can change it anytime via Settings.
+        </p>
+        <button
+          class="btn-generate"
+          id="save-key-btn"
+          style="font-size: 16px; padding: 12px">
+          SAVE &amp; CONTINUE →
+        </button>
+      </div>
+    </div>
+
+    <!-- ── HEADER ─────────────────────────────────────────────── -->
+    <header>
+      <div class="logo">
+        anjaniya<span>.in</span>
         <span
-          class="text-xs bg-slate-800 px-3 py-1 rounded-full text-slate-400 border border-slate-700">
-          System: Live API Integration
-        </span>
+          style="
+            font-size: 13px;
+            color: var(--muted);
+            font-family: var(--font-body);
+            letter-spacing: 0;
+          "
+          >News Card Studio</span
+        >
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center">
+        <span class="badge">GEMINI POWERED</span>
+        <button class="btn-sm" id="change-key-btn" title="Change API Key">
+          ⚙ API Key
+        </button>
       </div>
     </header>
 
-    <!-- Main Workspace -->
-    <main class="max-w-4xl w-full mx-auto p-4 my-auto space-y-6">
-      <!-- Fixed Prompt Configuration -->
-      <div
-        class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 backdrop-blur-sm">
-        <details class="group">
-          <summary
-            class="list-none flex justify-between items-center cursor-pointer text-sm text-slate-400 hover:text-slate-200 transition">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-              <span>View Active System Pre-Prompt (Fixed Prompt)</span>
-            </div>
-            <span class="transition group-open:rotate-180">▼</span>
-          </summary>
-          <div class="mt-3">
+    <!-- ── MAIN ───────────────────────────────────────────────── -->
+    <main>
+      <!-- LEFT: INPUT PANEL -->
+      <div class="panel">
+        <div>
+          <div class="section-label">01 — Input</div>
+          <div class="field-group">
+            <label>NEWS TEXT / DESCRIPTION</label>
             <textarea
-              id="fixedPrompt"
-              class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs font-mono text-emerald-400 focus:outline-none focus:border-slate-700 h-28 resize-none">
+              id="news-text"
+              placeholder="Paste raw news text here — English, Hindi, or both. The AI will structure it into a card."></textarea>
+          </div>
+        </div>
+
+        <div>
+          <div class="section-label">02 — Image (optional)</div>
+          <div class="upload-zone" id="upload-zone">
+            <input type="file" id="img-input" accept="image/*" />
+            <div class="icon">🖼️</div>
+            <p>Click or drag an image to include in the card</p>
+          </div>
+          <img id="img-preview" alt="preview" />
+        </div>
+
+        <hr class="divider" />
+
+        <div>
+          <div class="section-label">03 — Card Settings</div>
+          <div class="field-group" style="margin-bottom: 12px">
+            <label>CATEGORY / COLOR THEME</label>
+            <select id="category">
+              <option value="news">📰 News / Protest — Red</option>
+              <option value="environment">
+                🌿 Environment / Nature — Green
+              </option>
+              <option value="water">💧 Water / Flood — Blue</option>
+              <option value="development">
+                🏗️ Development / Celebration — Saffron
+              </option>
+              <option value="tribute">
+                🕯️ Tribute / Historical — Dark Gold
+              </option>
+            </select>
+          </div>
+          <div class="field-group">
+            <label>REPORTER HANDLE</label>
+            <input type="text" id="reporter" value="@anjaniya.in" />
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <div>
+          <label class="prompt-toggle">
+            <input type="checkbox" id="show-prompt" /> Preview full prompt sent
+            to Gemini
+          </label>
+          <div id="prompt-box"></div>
+        </div>
+
+        <button class="btn-generate" id="gen-btn">
+          <div class="spinner" id="spinner"></div>
+          <span id="btn-label">GENERATE CARD →</span>
+        </button>
+
+        <div id="status"></div>
+      </div>
+
+      <!-- RIGHT: PREVIEW PANEL -->
+      <div class="preview-area">
+        <div class="preview-toolbar">
+          <span id="toolbar-info"
+            >Output will appear here after generation</span
+          >
+          <button class="btn-sm" id="open-tab-btn" disabled>
+            ⧉ Open in New Tab
+          </button>
+          <button class="btn-sm" id="copy-html-btn" disabled>
+            ⎘ Copy HTML
+          </button>
+          <button class="btn-sm primary" id="download-btn" disabled>
+            ↓ Download HTML
+          </button>
+        </div>
+        <div class="preview-frame" id="preview-frame">
+          <div class="empty-state">
+            <div class="big">📰</div>
+            <p>
+              Enter news text on the left<br />and click
+              <strong>Generate Card</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════════
+      //  ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗
+      // ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝
+      // ██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
+      // ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
+      // ╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
+      //  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝
+      //
+      //  👇 FIND "CONFIG — EDIT HERE" TO PLACE YOUR FIXED PROMPT
+      // ═══════════════════════════════════════════════════════════════
+
+      // ─────────────────────────────────────────────────────────────
+      //  🔧  CONFIG — EDIT HERE
+      //      1. API_KEY  : leave "" to always ask user via modal
+      //                   OR paste your key here to hard-code it
+      //                   (NOT recommended for public GitHub Pages)
+      //      2. FIXED_PROMPT_TEMPLATE : your exact fixed prompt.
+      //         Use these placeholders (they get replaced at runtime):
+      //           {{NEWS_TEXT}}    — the raw news text user pasted
+      //           {{CATEGORY}}     — e.g. "news", "tribute", etc.
+      //           {{ACCENT_COLOR}} — hex color for the category
+      //           {{REPORTER}}     — reporter handle string
+      //           {{HAS_IMAGE}}    — "true" / "false"
+      // ─────────────────────────────────────────────────────────────
+
+      const HARDCODED_API_KEY = "AIzaSyB0Cm2Qjr5HVQqSCWQikg7Fe7ZY9TtKLkc"; // ← paste key here to skip modal, or leave ""
+
+      const FIXED_PROMPT_TEMPLATE = `
 You are a news card designer for "anjaniya.in" — a community 
 news page for the Anjaniya community in Mandla, Madhya Pradesh.
 
@@ -163,10 +725,10 @@ Replace the standard download button with this
 HIGH QUALITY version that exports at true 4K Instagram quality:
 
 <!-- Load html2canvas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
 
 <!-- Load jsPDF for PDF option -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
 
 <div class="dl-row">
   <button class="dl-btn" id="dl-png" onclick="downloadPNG()">
@@ -284,7 +846,7 @@ async function downloadPDF() {
     btn.disabled = false;
   }
 }
-</script>
+<\/script>
 
 ════════════════════════════════════════
 NEW ADDITION 3 — POST CONTEXT OUTPUT
@@ -538,265 +1100,258 @@ RULES:
    - Accent elements
 4. Hindi text must remain bold (#111 or cream in dark mode)
 5. Festival themes override normal categories
-6. Mandla.in can use Narmada theme when relevant</textarea
-            >
-          </div>
-        </details>
-      </div>
+6. Mandla.in can use Narmada theme when relevant
+`.trim();
 
-      <!-- Interactive Input Box Structure -->
-      <div
-        class="bg-slate-900/80 border border-slate-700/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden group/box">
-        <div
-          class="absolute -inset-px bg-gradient-to-r from-cyan-500/10 to-fuchsia-500/10 rounded-2xl blur-sm pointer-events-none"></div>
+      // ─────────────────────────────────────────────────────────────
+      //  END CONFIG
+      // ─────────────────────────────────────────────────────────────
 
-        <div class="relative space-y-4">
-          <!-- Text Area Input -->
-          <textarea
-            id="userInput"
-            placeholder="Describe the web page layout, components, or feature you want to build..."
-            class="w-full bg-transparent text-slate-100 placeholder-slate-500 border-0 focus:ring-0 focus:outline-none resize-none h-32 text-base md:text-lg leading-relaxed"></textarea>
+      // color map per category
+      const ACCENT_MAP = {
+        news: "#c4390a",
+        environment: "#1a6b2f",
+        water: "#1a7bb8",
+        development: "#d4580a",
+        tribute: "#c9932a",
+      };
 
-          <!-- Image Preview Container (Hidden by default) -->
-          <div
-            id="imagePreviewContainer"
-            class="hidden relative inline-block border border-slate-700 rounded-xl overflow-hidden bg-slate-950/50 p-2 group">
-            <img
-              id="imagePreview"
-              src="#"
-              alt="Upload preview"
-              class="max-h-32 rounded-lg object-contain" />
-            <button
-              id="removeImageBtn"
-              class="absolute top-3 right-3 bg-rose-600/90 hover:bg-rose-600 text-white p-1 rounded-full shadow-lg transition">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+      // ── API KEY MANAGEMENT ──────────────────────────────────────
+      let apiKey =
+        HARDCODED_API_KEY || localStorage.getItem("gemini_api_key") || "";
 
-          <!-- Control Bar inside the box -->
-          <div
-            class="flex flex-wrap items-center justify-between pt-4 border-t border-slate-800 gap-4">
-            <!-- Media Attachments Buttons -->
-            <div class="flex items-center gap-2">
-              <label
-                class="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl cursor-pointer text-sm font-medium transition border border-slate-700/60">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5 text-cyan-400"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 002-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span>Add Reference Image</span>
-                <input
-                  type="file"
-                  id="imageInput"
-                  accept="image/*"
-                  class="hidden" />
-              </label>
-            </div>
+      const modal = document.getElementById("api-modal");
+      const apiInput = document.getElementById("api-key-input");
+      const saveKeyBtn = document.getElementById("save-key-btn");
+      const changeKeyBtn = document.getElementById("change-key-btn");
 
-            <!-- Execution Action Button -->
-            <button
-              id="generateBtn"
-              class="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-fuchsia-600 hover:from-cyan-400 hover:to-fuchsia-500 text-white font-semibold px-6 py-2.5 rounded-xl transition shadow-lg shadow-cyan-500/20 active:scale-[0.98]">
-              <span>Compile & Run</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M14 5l7 7m0 0l-7 7m7-7H3" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
+      function showModal() {
+        modal.classList.remove("hidden");
+        apiInput.value = apiKey;
+        apiInput.focus();
+      }
+      function hideModal() {
+        modal.classList.add("hidden");
+      }
 
-      <!-- System Console Logs -->
-      <div
-        id="outputConsole"
-        class="hidden bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs text-slate-400 space-y-2 max-h-48 overflow-y-auto">
-        <div
-          class="text-cyan-400 font-bold border-b border-slate-800 pb-1 mb-2 flex justify-between items-center">
-          <span>API Compilation status</span>
-          <span
-            id="consoleStatus"
-            class="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-amber-400"
-            >Processing</span
-          >
-        </div>
-        <div id="logFixedPrompt"></div>
-        <div id="logUserInput"></div>
-        <div id="logImageInput"></div>
-      </div>
-    </main>
+      if (!apiKey) showModal();
+      else hideModal();
 
-    <!-- Footer -->
-    <footer
-      class="text-center p-4 text-xs text-slate-600 border-t border-t-slate-900 bg-slate-950/20">
-      Bundles your prompt assets into the LLM context frame and creates an
-      immediate runtime render tab.
-    </footer>
-
-    <!-- Frontend Core Script Engine -->
-    <script>
-      // --- 1. CONFIGURATION: INSERT YOUR GEMINI API KEY HERE ---
-      const GEMINI_API_KEY = "AIzaSyBFQNtsAkUdU2V5DAVfY5h4gfIgqSHCJGo";
-      const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-
-      const imageInput = document.getElementById("imageInput");
-      const imagePreviewContainer = document.getElementById(
-        "imagePreviewContainer",
-      );
-      const imagePreview = document.getElementById("imagePreview");
-      const removeImageBtn = document.getElementById("removeImageBtn");
-      const userInput = document.getElementById("userInput");
-      const fixedPrompt = document.getElementById("fixedPrompt");
-      const generateBtn = document.getElementById("generateBtn");
-      const outputConsole = document.getElementById("outputConsole");
-      const consoleStatus = document.getElementById("consoleStatus");
-
-      let base64ImageString = "No image payload attached";
-
-      // Handle Image Attachment UI previews
-      imageInput.addEventListener("change", function () {
-        const file = this.files[0];
-        if (file) {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            imagePreview.src = e.target.result;
-            base64ImageString = e.target.result;
-            imagePreviewContainer.classList.remove("hidden");
-          };
-          reader.readAsDataURL(file);
+      saveKeyBtn.addEventListener("click", () => {
+        const v = apiInput.value.trim();
+        if (!v) {
+          alert("Please enter a valid API key.");
+          return;
         }
+        apiKey = v;
+        localStorage.setItem("gemini_api_key", v);
+        hideModal();
+      });
+      changeKeyBtn.addEventListener("click", showModal);
+      apiInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") saveKeyBtn.click();
       });
 
-      // Detach Image Action
-      removeImageBtn.addEventListener("click", function () {
-        imageInput.value = "";
-        base64ImageString = "No image payload attached";
-        imagePreviewContainer.classList.add("hidden");
-        imagePreview.src = "#";
+      // ── IMAGE HANDLING ──────────────────────────────────────────
+      let imageBase64 = null;
+      let imageMime = null;
+
+      const imgInput = document.getElementById("img-input");
+      const imgPreview = document.getElementById("img-preview");
+      const uploadZone = document.getElementById("upload-zone");
+
+      imgInput.addEventListener("change", () => {
+        const file = imgInput.files[0];
+        if (!file) return;
+        imageMime = file.type || "image/jpeg";
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          imageBase64 = e.target.result.split(",")[1];
+          imgPreview.src = e.target.result;
+          imgPreview.style.display = "block";
+          uploadZone.classList.add("has-img");
+          uploadZone.querySelector("p").textContent = file.name;
+        };
+        reader.readAsDataURL(file);
       });
 
-      // Core App Logic: Run combined payload against live Gemini API endpoint
-      generateBtn.addEventListener("click", async function () {
-        const textValue = userInput.value.trim();
-        const systemTemplate = fixedPrompt.value.trim();
+      // ── PROMPT PREVIEW ──────────────────────────────────────────
+      const showPromptCb = document.getElementById("show-prompt");
+      const promptBox = document.getElementById("prompt-box");
 
-        if (!textValue && base64ImageString === "No image payload attached") {
-          alert(
-            "Please add either text instructions or an image before running compilation.",
-          );
+      function buildPrompt() {
+        const cat = document.getElementById("category").value;
+        const accent = ACCENT_MAP[cat] || "#c4390a";
+        const text =
+          document.getElementById("news-text").value.trim() ||
+          "[no text provided]";
+        const rep =
+          document.getElementById("reporter").value.trim() || "#gajendra 2.O";
+        const hasImg = imageBase64 ? "true" : "false";
+        return FIXED_PROMPT_TEMPLATE.replace(/\{\{CATEGORY\}\}/g, cat)
+          .replace(/\{\{ACCENT_COLOR\}\}/g, accent)
+          .replace(/\{\{NEWS_TEXT\}\}/g, text)
+          .replace(/\{\{REPORTER\}\}/g, rep)
+          .replace(/\{\{HAS_IMAGE\}\}/g, hasImg);
+      }
+
+      showPromptCb.addEventListener("change", () => {
+        promptBox.style.display = showPromptCb.checked ? "block" : "none";
+        if (showPromptCb.checked) promptBox.textContent = buildPrompt();
+      });
+
+      // ── OUTPUT STATE ────────────────────────────────────────────
+      let generatedHTML = "";
+
+      const openTabBtn = document.getElementById("open-tab-btn");
+      const copyHtmlBtn = document.getElementById("copy-html-btn");
+      const downloadBtn = document.getElementById("download-btn");
+      const toolbarInfo = document.getElementById("toolbar-info");
+      const previewFrame = document.getElementById("preview-frame");
+
+      function setOutputReady(html) {
+        generatedHTML = html;
+        toolbarInfo.textContent = "Card generated ✓ — preview below";
+        openTabBtn.disabled = false;
+        copyHtmlBtn.disabled = false;
+        downloadBtn.disabled = false;
+
+        // Render in iframe
+        previewFrame.innerHTML = "";
+        const iframe = document.createElement("iframe");
+        iframe.id = "render-iframe";
+        iframe.style.cssText =
+          "width:100%;height:100%;border:none;border-radius:8px;";
+        previewFrame.appendChild(iframe);
+
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(html);
+        doc.close();
+      }
+
+      openTabBtn.addEventListener("click", () => {
+        if (!generatedHTML) return;
+        const w = window.open("", "_blank");
+        w.document.open();
+        w.document.write(generatedHTML);
+        w.document.close();
+      });
+
+      copyHtmlBtn.addEventListener("click", async () => {
+        if (!generatedHTML) return;
+        await navigator.clipboard.writeText(generatedHTML);
+        copyHtmlBtn.textContent = "✓ Copied!";
+        setTimeout(() => {
+          copyHtmlBtn.textContent = "⎘ Copy HTML";
+        }, 2000);
+      });
+
+      downloadBtn.addEventListener("click", () => {
+        if (!generatedHTML) return;
+        const a = document.createElement("a");
+        a.href =
+          "data:text/html;charset=utf-8," + encodeURIComponent(generatedHTML);
+        a.download = "anjaniya-card-" + Date.now() + ".html";
+        a.click();
+      });
+
+      // ── STATUS HELPERS ──────────────────────────────────────────
+      const statusEl = document.getElementById("status");
+      function setStatus(msg, type) {
+        statusEl.textContent = msg;
+        statusEl.className = type;
+        statusEl.style.display = msg ? "block" : "none";
+      }
+
+      // ── GENERATE ────────────────────────────────────────────────
+      const genBtn = document.getElementById("gen-btn");
+      const spinner = document.getElementById("spinner");
+      const btnLabel = document.getElementById("btn-label");
+
+      genBtn.addEventListener("click", generate);
+
+      async function generate() {
+        if (!apiKey) {
+          showModal();
+          return;
+        }
+        const newsText = document.getElementById("news-text").value.trim();
+        if (!newsText && !imageBase64) {
+          setStatus("Please enter news text or upload an image.", "err");
           return;
         }
 
-        if (
-          !GEMINI_API_KEY ||
-          GEMINI_API_KEY === "YOUR_REAL_GEMINI_API_KEY_HERE"
-        ) {
-          alert(
-            "Please open the file script and configure your real 'GEMINI_API_KEY' variable first.",
-          );
-          return;
-        }
-
-        // Reset and show status console logs
-        outputConsole.classList.remove("hidden");
-        consoleStatus.className =
-          "text-[10px] bg-slate-900 px-2 py-0.5 rounded text-amber-400";
-        consoleStatus.innerText = "Processing";
-
-        document.getElementById("logFixedPrompt").innerText =
-          `[SYSTEM PROMPT CONFIG LOADEDED]`;
-        document.getElementById("logUserInput").innerText =
-          `[USER REQUEST SENT]: "${textValue || "Image Context Only"}"`;
-        document.getElementById("logImageInput").innerText =
-          `[IMAGE LOAD STATUS]: ${base64ImageString === "No image payload attached" ? "No asset uploaded" : "Base64 Byte stream prepared..."}`;
+        // UI state: loading
+        genBtn.disabled = true;
+        spinner.style.display = "block";
+        btnLabel.textContent = "Generating…";
+        setStatus("Sending to Gemini API…", "ok");
 
         try {
-          // Prepare API Structure Data Array
-          const parts = [];
+          const prompt = buildPrompt();
 
-          // Mix system prompt conditions with user instructions explicitly
-          const combinedPromptText = `${systemTemplate}\n\n[User Requirement Layout Request]:\n${textValue}`;
-          parts.push({ text: combinedPromptText });
+          // build message content
+          const content = [];
 
-          // Attach base64 image data structures if present
-          if (base64ImageString !== "No image payload attached") {
-            const [meta, rawData] = base64ImageString.split(",");
-            const mimeType = meta.match(/:(.*?);/)[1];
-
-            parts.push({
-              inlineData: {
-                mimeType: mimeType,
-                data: rawData,
-              },
+          // If image provided, add it
+          if (imageBase64) {
+            content.push({
+              inline_data: { mime_type: imageMime, data: imageBase64 },
             });
           }
+          content.push({ text: prompt });
 
-          // Fire async network request to Google Cloud servers
-          const response = await fetch(GEMINI_API_URL, {
+          // Gemini API call
+          const MODEL = "gemini-1.5-flash"; // ← change model here if needed
+          const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
+
+          const body = {
+            contents: [{ role: "user", parts: content }],
+            generationConfig: {
+              temperature: 0.4,
+              maxOutputTokens: 8192,
+            },
+          };
+
+          const res = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ contents: [{ parts: parts }] }),
+            body: JSON.stringify(body),
           });
 
-          if (!response.ok)
-            throw new Error(`HTTP Error Status: ${response.status}`);
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error?.message || `HTTP ${res.status}`);
+          }
 
-          const data = await response.json();
-          let generatedHTMLOutput = data.candidates[0].content.parts[0].text;
+          const data = await res.json();
+          let raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
-          // Strip down backtick markdown fences structural faults if returned by accident
-          generatedHTMLOutput = generatedHTMLOutput
-            .replace(/```html/gi, "")
-            .replace(/```/g, "")
+          // Strip markdown fences if Gemini wrapped it
+          raw = raw
+            .replace(/^```html\s*/i, "")
+            .replace(/^```\s*/i, "")
+            .replace(/```\s*$/, "")
             .trim();
 
-          // Update console tracker UI to success status
-          consoleStatus.className =
-            "text-[10px] bg-slate-900 px-2 py-0.5 rounded text-emerald-400";
-          consoleStatus.innerText = "Success";
+          if (!raw || !raw.includes("<html")) {
+            throw new Error(
+              "Gemini returned unexpected output. Try again or adjust the prompt.",
+            );
+          }
 
-          // Open empty browser tab instance and stream compiled engine output directly
-          const newTab = window.open();
-          newTab.document.open();
-          newTab.document.write(generatedHTMLOutput);
-          newTab.document.close();
-        } catch (error) {
-          console.error("API Engine Compilation Fault:", error);
-          consoleStatus.className =
-            "text-[10px] bg-slate-900 px-2 py-0.5 rounded text-rose-400";
-          consoleStatus.innerText = "Error Failed";
-          alert(
-            "Failed to build page. Please check your network context logs or verify your Gemini key is active.",
-          );
+          setOutputReady(raw);
+          setStatus("✓ Card generated successfully!", "ok");
+        } catch (e) {
+          setStatus("Error: " + e.message, "err");
+          console.error(e);
+        } finally {
+          genBtn.disabled = false;
+          spinner.style.display = "none";
+          btnLabel.textContent = "GENERATE CARD →";
         }
-      });
+      }
     </script>
   </body>
 </html>
