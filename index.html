@@ -1,1361 +1,1067 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>News Card Generator — anjaniya.in</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap"
-      rel="stylesheet" />
-    <style>
-      /* ─── TOKENS ─────────────────────────────────────── */
-      :root {
-        --bg: #0d0f11;
-        --surface: #141618;
-        --card: #1a1d20;
-        --border: #2a2d31;
-        --accent: #e8531a;
-        --accent2: #f5a623;
-        --text: #f0ede8;
-        --muted: #8a8784;
-        --dim: #444;
-        --radius: 10px;
-        --font-head: "Bebas Neue", sans-serif;
-        --font-body: "DM Sans", sans-serif;
-        --font-mono: "JetBrains Mono", monospace;
-      }
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-      }
-      body {
-        background: var(--bg);
-        color: var(--text);
-        font-family: var(--font-body);
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>News Card Studio — anjaniya.in × mandla.in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0d0f11;
+      --surface: #141618;
+      --card: #1a1d20;
+      --border: #2a2d31;
+      --accent: #e8531a;
+      --accent2: #f5a623;
+      --teal: #0e8c72;
+      --text: #f0ede8;
+      --muted: #8a8784;
+      --dim: #444;
+      --radius: 10px;
+      --font-head: "Bebas Neue", sans-serif;
+      --font-body: "DM Sans", sans-serif;
+      --font-mono: "JetBrains Mono", monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    body::before {
+      content: "";
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 0;
+    }
+    header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 28px; border-bottom: 1px solid var(--border);
+      position: relative; z-index: 10;
+    }
+    .logo { font-family: var(--font-head); font-size: 22px; letter-spacing: 2px; }
+    .logo .a { color: var(--accent); }
+    .logo .t { color: var(--teal); }
+    .logo .sep { color: var(--dim); margin: 0 6px; }
+    .badge {
+      font-family: var(--font-mono); font-size: 10px;
+      background: var(--accent); color: #fff;
+      padding: 3px 10px; border-radius: 20px; letter-spacing: 1px;
+    }
+    .brand-switcher {
+      display: flex; gap: 0; border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+    }
+    .brand-btn {
+      background: var(--card); color: var(--muted); border: none;
+      padding: 8px 16px; font-family: var(--font-head); font-size: 14px;
+      letter-spacing: 1.5px; cursor: pointer; transition: all 0.2s;
+      border-right: 1px solid var(--border);
+    }
+    .brand-btn:last-child { border-right: none; }
+    .brand-btn.active-anj { background: rgba(232,83,26,0.2); color: var(--accent); }
+    .brand-btn.active-man { background: rgba(14,140,114,0.2); color: var(--teal); }
+    .brand-btn.active-both {
+      background: linear-gradient(90deg, rgba(232,83,26,0.2), rgba(14,140,114,0.2));
+      color: var(--text);
+    }
+    main {
+      flex: 1; display: grid; grid-template-columns: 400px 1fr;
+      position: relative; z-index: 1;
+    }
+    .panel {
+      background: var(--surface); border-right: 1px solid var(--border);
+      padding: 24px 20px; display: flex; flex-direction: column;
+      gap: 18px; overflow-y: auto; max-height: calc(100vh - 58px);
+    }
+    .section-label {
+      font-family: var(--font-mono); font-size: 10px; color: var(--accent);
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+    }
+    .section-label.teal { color: var(--teal); }
+    .field-group { display: flex; flex-direction: column; gap: 5px; }
+    label { font-size: 12px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; }
+    textarea, select, input[type="text"] {
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); border-radius: var(--radius);
+      padding: 10px 14px; font-family: var(--font-body);
+      font-size: 13px; resize: vertical; transition: border 0.2s; width: 100%;
+    }
+    textarea:focus, select:focus, input:focus { outline: none; border-color: var(--accent); }
+    textarea { min-height: 90px; }
+    .upload-zone {
+      border: 1.5px dashed var(--dim); border-radius: var(--radius);
+      padding: 18px; text-align: center; cursor: pointer;
+      transition: border 0.2s, background 0.2s; position: relative;
+    }
+    .upload-zone:hover { border-color: var(--accent); background: rgba(232,83,26,0.05); }
+    .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .upload-zone .icon { font-size: 22px; margin-bottom: 4px; }
+    .upload-zone p { font-size: 12px; color: var(--muted); }
+    .upload-zone.has-img { border-color: var(--accent2); }
+    #img-preview { width: 100%; border-radius: 8px; margin-top: 8px; display: none; max-height: 130px; object-fit: cover; }
+    .img-gen-status {
+      font-size: 11px; padding: 8px 12px; border-radius: 6px;
+      display: none; border: 1px solid var(--border);
+      background: rgba(14,140,114,0.1); color: #5ecf7e;
+    }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 2px 0; }
+    .btn-generate {
+      background: var(--accent); color: #fff; border: none; border-radius: var(--radius);
+      padding: 13px; font-family: var(--font-head); font-size: 18px;
+      letter-spacing: 2px; cursor: pointer; transition: background 0.2s, transform 0.1s;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+    }
+    .btn-generate:hover { background: #d44a10; }
+    .btn-generate:active { transform: scale(0.98); }
+    .btn-generate:disabled { background: var(--dim); cursor: not-allowed; }
+    .btn-generate.both-mode {
+      background: linear-gradient(90deg, var(--accent) 0%, var(--teal) 100%);
+    }
+    .btn-generate.both-mode:hover {
+      background: linear-gradient(90deg, #d44a10 0%, #0a7060 100%);
+    }
+    .spinner {
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3); border-top-color: #fff;
+      border-radius: 50%; animation: spin 0.7s linear infinite; display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #status {
+      font-size: 12px; text-align: center; padding: 6px;
+      border-radius: 6px; display: none;
+    }
+    #status.ok { background: rgba(26,107,47,0.25); color: #5ecf7e; }
+    #status.err { background: rgba(196,57,10,0.25); color: #f07050; }
+    #status.info { background: rgba(14,140,114,0.2); color: #5ecfbe; }
+    .progress-wrap { display: none; flex-direction: column; gap: 6px; }
+    .progress-step {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 11px; font-family: var(--font-mono);
+      padding: 5px 10px; border-radius: 6px;
+      border: 1px solid var(--border); color: var(--muted);
+      background: var(--card);
+    }
+    .progress-step .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--dim); flex-shrink: 0; }
+    .progress-step.active .dot { background: var(--accent2); animation: blink 1s ease-in-out infinite; }
+    .progress-step.done .dot { background: #5ecf7e; }
+    .progress-step.done { color: #5ecf7e; }
+    .progress-step.active { color: var(--accent2); border-color: var(--accent2); }
+    @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+    .preview-area { display: flex; flex-direction: column; overflow: hidden; }
+    .preview-dual {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0; flex: 1; overflow: hidden;
+    }
+    .preview-col {
+      display: flex; flex-direction: column; border-right: 1px solid var(--border);
+    }
+    .preview-col:last-child { border-right: none; }
+    .preview-toolbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 10px 16px; display: flex; align-items: center;
+      gap: 8px; flex-wrap: wrap; flex-shrink: 0;
+    }
+    .preview-toolbar span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); flex: 1; }
+    .col-label {
+      font-family: var(--font-head); font-size: 14px; letter-spacing: 1.5px;
+      padding: 0 4px;
+    }
+    .col-label.anj { color: var(--accent); }
+    .col-label.man { color: var(--teal); }
+    .btn-sm {
+      background: var(--card); border: 1px solid var(--border); color: var(--text);
+      border-radius: 6px; padding: 6px 12px; font-family: var(--font-body);
+      font-size: 11px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s, border 0.15s; white-space: nowrap;
+    }
+    .btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-sm.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn-sm.primary:hover { background: #d44a10; }
+    .btn-sm.teal-btn { background: var(--teal); border-color: var(--teal); color: #fff; }
+    .btn-sm.teal-btn:hover { background: #0a7060; }
+    .btn-sm:disabled { opacity: 0.4; cursor: not-allowed; }
+    .preview-frame {
+      flex: 1; background: #edeae4; display: flex;
+      align-items: center; justify-content: center;
+      overflow: auto; padding: 20px;
+    }
+    .preview-frame.man-bg { background: #e8ede8; }
+    .empty-state { text-align: center; color: var(--dim); }
+    .empty-state .big { font-size: 42px; margin-bottom: 10px; }
+    .empty-state p { font-size: 12px; line-height: 1.7; }
+    .single-preview { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .single-toolbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: 10px 16px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .single-toolbar span { font-family: var(--font-mono); font-size: 10px; color: var(--muted); flex: 1; }
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; backdrop-filter: blur(4px);
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 14px; padding: 28px; width: 440px; max-width: 90vw;
+    }
+    .modal h2 { font-family: var(--font-head); font-size: 26px; margin-bottom: 6px; }
+    .modal p { font-size: 13px; color: var(--muted); margin-bottom: 14px; line-height: 1.6; }
+    .modal input {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); border-radius: var(--radius);
+      padding: 11px 14px; font-family: var(--font-mono); font-size: 13px; margin-bottom: 12px;
+    }
+    .modal input:focus { outline: none; border-color: var(--accent); }
+    .modal-note { font-size: 11px; color: var(--dim); margin-bottom: 16px; line-height: 1.5; }
+    .modal-note a { color: var(--accent); text-decoration: none; }
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      .preview-dual { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
 
-      /* ─── NOISE OVERLAY ──────────────────────────────── */
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
-        pointer-events: none;
-        z-index: 0;
-      }
+<!-- API KEY MODAL -->
+<div class="modal-overlay hidden" id="api-modal">
+  <div class="modal">
+    <h2>API <span style="color:var(--accent)">Key</span></h2>
+    <p>Enter your Gemini API key. Stored only in your browser's localStorage.</p>
+    <label style="font-size:12px;color:var(--muted);font-weight:600;">GEMINI API KEY</label>
+    <input type="password" id="api-key-input" placeholder="AIza..." style="margin-top:6px;" />
+    <p class="modal-note">
+      Get a free key at <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>.<br/>
+      Used for card generation (Gemini 2.5 Flash) + image generation (Imagen 3).
+    </p>
+    <button class="btn-generate" id="save-key-btn" style="font-size:15px;padding:11px;">SAVE &amp; CONTINUE →</button>
+  </div>
+</div>
 
-      /* ─── HEADER ─────────────────────────────────────── */
-      header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 18px 32px;
-        border-bottom: 1px solid var(--border);
-        position: relative;
-        z-index: 1;
-      }
-      .logo {
-        font-family: var(--font-head);
-        font-size: 26px;
-        letter-spacing: 2px;
-        color: var(--text);
-      }
-      .logo span {
-        color: var(--accent);
-      }
-      .badge {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        background: var(--accent);
-        color: #fff;
-        padding: 3px 10px;
-        border-radius: 20px;
-        letter-spacing: 1px;
-      }
+<!-- HEADER -->
+<header>
+  <div style="display:flex;align-items:center;gap:16px;">
+    <div class="logo">
+      <span class="a">anjaniya</span><span style="color:var(--dim)">.in</span>
+      <span class="sep">×</span>
+      <span class="t">mandla</span><span style="color:var(--dim)">.in</span>
+      <span style="font-size:12px;color:var(--muted);font-family:var(--font-body);letter-spacing:0;margin-left:8px;">News Card Studio</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <div class="brand-switcher">
+      <button class="brand-btn active-anj" id="btn-anj" onclick="setBrand('anjaniya')">ANJANIYA</button>
+      <button class="brand-btn" id="btn-man" onclick="setBrand('mandla')">MANDLA</button>
+      <button class="brand-btn" id="btn-both" onclick="setBrand('both')">BOTH ✦</button>
+    </div>
+    <span class="badge" id="ai-badge">GEMINI POWERED</span>
+    <button class="btn-sm" id="change-key-btn">⚙ API Keys</button>
+  </div>
+</header>
 
-      /* ─── MAIN LAYOUT ────────────────────────────────── */
-      main {
-        flex: 1;
-        display: grid;
-        grid-template-columns: 400px 1fr;
-        gap: 0;
-        position: relative;
-        z-index: 1;
-      }
-
-      /* ─── LEFT PANEL ─────────────────────────────────── */
-      .panel {
-        background: var(--surface);
-        border-right: 1px solid var(--border);
-        padding: 28px 24px;
-        display: flex;
-        flex-direction: column;
-        gap: 22px;
-        overflow-y: auto;
-      }
-      .section-label {
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--accent);
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-      }
-      .field-group {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
-      }
-      label {
-        font-size: 12px;
-        color: var(--muted);
-        font-weight: 600;
-        letter-spacing: 0.5px;
-      }
-      textarea,
-      select,
-      input[type="text"] {
-        background: var(--card);
-        border: 1px solid var(--border);
-        color: var(--text);
-        border-radius: var(--radius);
-        padding: 10px 14px;
-        font-family: var(--font-body);
-        font-size: 13px;
-        resize: vertical;
-        transition: border 0.2s;
-        width: 100%;
-      }
-      textarea:focus,
-      select:focus,
-      input:focus {
-        outline: none;
-        border-color: var(--accent);
-      }
-      textarea {
-        min-height: 90px;
-      }
-
-      /* image upload */
-      .upload-zone {
-        border: 1.5px dashed var(--dim);
-        border-radius: var(--radius);
-        padding: 22px;
-        text-align: center;
-        cursor: pointer;
-        transition:
-          border 0.2s,
-          background 0.2s;
-        position: relative;
-      }
-      .upload-zone:hover {
-        border-color: var(--accent);
-        background: rgba(232, 83, 26, 0.05);
-      }
-      .upload-zone input {
-        position: absolute;
-        inset: 0;
-        opacity: 0;
-        cursor: pointer;
-        width: 100%;
-        height: 100%;
-      }
-      .upload-zone .icon {
-        font-size: 26px;
-        margin-bottom: 6px;
-      }
-      .upload-zone p {
-        font-size: 12px;
-        color: var(--muted);
-      }
-      .upload-zone.has-img {
-        border-color: var(--accent2);
-      }
-      #img-preview {
-        width: 100%;
-        border-radius: 8px;
-        margin-top: 10px;
-        display: none;
-        max-height: 160px;
-        object-fit: cover;
-      }
-
-      /* divider */
-      .divider {
-        border: none;
-        border-top: 1px solid var(--border);
-        margin: 4px 0;
-      }
-
-      /* prompt preview toggle */
-      .prompt-toggle {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        color: var(--muted);
-        cursor: pointer;
-        user-select: none;
-      }
-      .prompt-toggle input {
-        accent-color: var(--accent);
-      }
-      #prompt-box {
-        background: var(--bg);
-        border: 1px solid var(--border);
-        border-radius: var(--radius);
-        padding: 12px;
-        font-family: var(--font-mono);
-        font-size: 10px;
-        color: var(--muted);
-        max-height: 120px;
-        overflow-y: auto;
-        line-height: 1.6;
-        display: none;
-        white-space: pre-wrap;
-        word-break: break-word;
-      }
-
-      /* generate button */
-      .btn-generate {
-        background: var(--accent);
-        color: #fff;
-        border: none;
-        border-radius: var(--radius);
-        padding: 14px;
-        font-family: var(--font-head);
-        font-size: 20px;
-        letter-spacing: 2px;
-        cursor: pointer;
-        transition:
-          background 0.2s,
-          transform 0.1s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-      }
-      .btn-generate:hover {
-        background: #d44a10;
-      }
-      .btn-generate:active {
-        transform: scale(0.98);
-      }
-      .btn-generate:disabled {
-        background: var(--dim);
-        cursor: not-allowed;
-      }
-
-      .spinner {
-        width: 16px;
-        height: 16px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: #fff;
-        border-radius: 50%;
-        animation: spin 0.7s linear infinite;
-        display: none;
-      }
-      @keyframes spin {
-        to {
-          transform: rotate(360deg);
-        }
-      }
-
-      /* status */
-      #status {
-        font-size: 12px;
-        text-align: center;
-        padding: 6px;
-        border-radius: 6px;
-        display: none;
-      }
-      #status.ok {
-        background: rgba(26, 107, 47, 0.25);
-        color: #5ecf7e;
-      }
-      #status.err {
-        background: rgba(196, 57, 10, 0.25);
-        color: #f07050;
-      }
-
-      /* ─── RIGHT PANEL — PREVIEW ──────────────────────── */
-      .preview-area {
-        display: flex;
-        flex-direction: column;
-      }
-      .preview-toolbar {
-        background: var(--surface);
-        border-bottom: 1px solid var(--border);
-        padding: 12px 20px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-      .preview-toolbar span {
-        font-family: var(--font-mono);
-        font-size: 11px;
-        color: var(--muted);
-        flex: 1;
-      }
-      .btn-sm {
-        background: var(--card);
-        border: 1px solid var(--border);
-        color: var(--text);
-        border-radius: 6px;
-        padding: 7px 14px;
-        font-family: var(--font-body);
-        font-size: 12px;
-        font-weight: 600;
-        cursor: pointer;
-        transition:
-          background 0.15s,
-          border 0.15s;
-        white-space: nowrap;
-      }
-      .btn-sm:hover {
-        border-color: var(--accent);
-        color: var(--accent);
-      }
-      .btn-sm.primary {
-        background: var(--accent);
-        border-color: var(--accent);
-        color: #fff;
-      }
-      .btn-sm.primary:hover {
-        background: #d44a10;
-      }
-      .btn-sm:disabled {
-        opacity: 0.4;
-        cursor: not-allowed;
-      }
-
-      .preview-frame {
-        flex: 1;
-        background: #edeae4;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: auto;
-        padding: 30px;
-      }
-      #render-iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-        background: transparent;
-      }
-
-      .empty-state {
-        text-align: center;
-        color: var(--dim);
-      }
-      .empty-state .big {
-        font-size: 52px;
-        margin-bottom: 12px;
-      }
-      .empty-state p {
-        font-size: 13px;
-        line-height: 1.7;
-      }
-
-      /* ─── API KEY MODAL ──────────────────────────────── */
-      .modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.7);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 100;
-        backdrop-filter: blur(4px);
-      }
-      .modal-overlay.hidden {
-        display: none;
-      }
-      .modal {
-        background: var(--card);
-        border: 1px solid var(--border);
-        border-radius: 14px;
-        padding: 32px;
-        width: 440px;
-        max-width: 90vw;
-      }
-      .modal h2 {
-        font-family: var(--font-head);
-        font-size: 28px;
-        margin-bottom: 6px;
-      }
-      .modal p {
-        font-size: 13px;
-        color: var(--muted);
-        margin-bottom: 20px;
-        line-height: 1.6;
-      }
-      .modal input {
-        width: 100%;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        color: var(--text);
-        border-radius: var(--radius);
-        padding: 12px 14px;
-        font-family: var(--font-mono);
-        font-size: 13px;
-        margin-bottom: 14px;
-      }
-      .modal input:focus {
-        outline: none;
-        border-color: var(--accent);
-      }
-      .modal-note {
-        font-size: 11px;
-        color: var(--dim);
-        margin-bottom: 18px;
-        line-height: 1.5;
-      }
-      .modal-note a {
-        color: var(--accent);
-        text-decoration: none;
-      }
-
-      /* ─── RESPONSIVE ─────────────────────────────────── */
-      @media (max-width: 800px) {
-        main {
-          grid-template-columns: 1fr;
-        }
-        .preview-area {
-          min-height: 60vh;
-        }
-      }
-    </style>
-  </head>
-  <body>
-    <!-- ── API KEY MODAL ──────────────────────────────────────── -->
-    <div class="modal-overlay" id="api-modal">
-      <div class="modal">
-        <h2>Enter <span style="color: var(--accent)">API Key</span></h2>
-        <p>
-          Your Gemini API key is stored only in your browser (localStorage) and
-          never sent anywhere except Google's API directly.
-        </p>
-        <input type="password" id="api-key-input" placeholder="AIza..." />
-        <p class="modal-note">
-          Get a free key at
-          <a href="https://aistudio.google.com/app/apikey" target="_blank"
-            >aistudio.google.com</a
-          >.<br />
-          Key is saved in your browser. You can change it anytime via Settings.
-        </p>
-        <button
-          class="btn-generate"
-          id="save-key-btn"
-          style="font-size: 16px; padding: 12px">
-          SAVE &amp; CONTINUE →
-        </button>
+<!-- MAIN -->
+<main>
+  <!-- LEFT PANEL -->
+  <div class="panel">
+    <div>
+      <div class="section-label">01 — Input</div>
+      <div class="field-group">
+        <label>NEWS TEXT / DESCRIPTION</label>
+        <textarea id="news-text" placeholder="Paste raw news text here — English, Hindi, or both. The AI will structure it into a card."></textarea>
       </div>
     </div>
 
-    <!-- ── HEADER ─────────────────────────────────────────────── -->
-    <header>
-      <div class="logo">
-        anjaniya<span>.in</span>
-        <span
-          style="
-            font-size: 13px;
-            color: var(--muted);
-            font-family: var(--font-body);
-            letter-spacing: 0;
-          "
-          >News Card Studio</span
-        >
+    <div>
+      <div class="section-label">02 — Image</div>
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button class="btn-sm" id="mode-upload-btn" onclick="setImgMode('upload')" style="flex:1;background:rgba(232,83,26,0.15);border-color:var(--accent);color:var(--accent);">📁 Upload</button>
+        <button class="btn-sm" id="mode-generate-btn" onclick="setImgMode('generate')" style="flex:1;">🤖 AI Generate</button>
+        <button class="btn-sm" id="mode-none-btn" onclick="setImgMode('none')" style="flex:1;">✗ No Image</button>
       </div>
-      <div style="display: flex; gap: 10px; align-items: center">
-        <span class="badge">GEMINI POWERED</span>
-        <button class="btn-sm" id="change-key-btn" title="Change API Key">
-          ⚙ API Key
-        </button>
+      <div id="upload-section">
+        <div class="upload-zone" id="upload-zone">
+          <input type="file" id="img-input" accept="image/*" />
+          <div class="icon">🖼️</div>
+          <p>Click or drag an image</p>
+        </div>
+        <img id="img-preview" alt="preview" />
       </div>
-    </header>
-
-    <!-- ── MAIN ───────────────────────────────────────────────── -->
-    <main>
-      <!-- LEFT: INPUT PANEL -->
-      <div class="panel">
-        <div>
-          <div class="section-label">01 — Input</div>
-          <div class="field-group">
-            <label>NEWS TEXT / DESCRIPTION</label>
-            <textarea
-              id="news-text"
-              placeholder="Paste raw news text here — English, Hindi, or both. The AI will structure it into a card."></textarea>
-          </div>
+      <div id="generate-section" style="display:none;">
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:12px;">
+          <div style="font-size:11px;color:var(--teal);font-family:var(--font-mono);letter-spacing:1.5px;margin-bottom:8px;">🤖 AI IMAGE GENERATION</div>
+          <label style="font-size:11px;color:var(--muted);font-weight:600;">IMAGE STYLE / EXTRA INSTRUCTIONS</label>
+          <textarea id="img-extra-prompt" placeholder="e.g. 'Show Mandla forest road at sunset' or leave blank for auto" style="min-height:60px;margin-top:5px;font-size:12px;"></textarea>
+          <div style="font-size:10px;color:var(--dim);margin-top:6px;line-height:1.5;">AI auto-generates a relevant image via Imagen 3, embedded into the final card.</div>
         </div>
-
-        <div>
-          <div class="section-label">02 — Image (optional)</div>
-          <div class="upload-zone" id="upload-zone">
-            <input type="file" id="img-input" accept="image/*" />
-            <div class="icon">🖼️</div>
-            <p>Click or drag an image to include in the card</p>
-          </div>
-          <img id="img-preview" alt="preview" />
-        </div>
-
-        <hr class="divider" />
-
-        <div>
-          <div class="section-label">03 — Card Settings</div>
-          <div class="field-group" style="margin-bottom: 12px">
-            <label>CATEGORY / COLOR THEME</label>
-            <select id="category">
-              <option value="news">📰 News / Protest — Red</option>
-              <option value="environment">
-                🌿 Environment / Nature — Green
-              </option>
-              <option value="water">💧 Water / Flood — Blue</option>
-              <option value="development">
-                🏗️ Development / Celebration — Saffron
-              </option>
-              <option value="tribute">
-                🕯️ Tribute / Historical — Dark Gold
-              </option>
-            </select>
-          </div>
-          <div class="field-group">
-            <label>REPORTER HANDLE</label>
-            <input type="text" id="reporter" value="@anjaniya.in" />
-          </div>
-        </div>
-
-        <hr class="divider" />
-
-        <div>
-          <label class="prompt-toggle">
-            <input type="checkbox" id="show-prompt" /> Preview full prompt sent
-            to Gemini
-          </label>
-          <div id="prompt-box"></div>
-        </div>
-
-        <button class="btn-generate" id="gen-btn">
-          <div class="spinner" id="spinner"></div>
-          <span id="btn-label">GENERATE CARD →</span>
-        </button>
-
-        <div id="status"></div>
+        <div class="img-gen-status" id="img-gen-status">🎨 Generating image...</div>
+        <img id="img-generated-preview" alt="generated" style="width:100%;border-radius:8px;margin-top:8px;display:none;max-height:130px;object-fit:cover;" />
       </div>
+    </div>
 
-      <!-- RIGHT: PREVIEW PANEL -->
-      <div class="preview-area">
-        <div class="preview-toolbar">
-          <span id="toolbar-info"
-            >Output will appear here after generation</span
-          >
-          <button class="btn-sm" id="open-tab-btn" disabled>
-            ⧉ Open in New Tab
-          </button>
-          <button class="btn-sm" id="copy-html-btn" disabled>
-            ⎘ Copy HTML
-          </button>
-          <button class="btn-sm primary" id="download-btn" disabled>
-            ↓ Download HTML
-          </button>
-        </div>
-        <div class="preview-frame" id="preview-frame">
-          <div class="empty-state">
-            <div class="big">📰</div>
-            <p>
-              Enter news text on the left<br />and click
-              <strong>Generate Card</strong>
-            </p>
-          </div>
-        </div>
+    <hr class="divider" />
+
+    <div>
+      <div class="section-label">03 — Card Settings</div>
+      <div class="field-group" style="margin-bottom:10px;">
+        <label>CATEGORY / COLOR THEME</label>
+        <select id="category">
+          <option value="news">📰 News / Protest — Red</option>
+          <option value="environment">🌿 Environment / Nature — Green</option>
+          <option value="water">💧 Water / Flood — Blue</option>
+          <option value="development">🏗️ Development / Celebration — Saffron</option>
+          <option value="tribute">🕯️ Tribute / Historical — Dark Gold</option>
+          <option value="social">💜 Social / Women / Inspiration — Purple</option>
+          <option value="sports">🏟️ Sports / Tournament — Green</option>
+          <option value="education">🎓 Education / Achievement — Blue</option>
+          <option value="national">🇮🇳 National Day — Tricolor</option>
+          <option value="jayanti">🌟 Jayanti / Birthday — Royal Gold</option>
+        </select>
       </div>
-    </main>
+      <div class="field-group">
+        <label>REPORTER HANDLE</label>
+        <input type="text" id="reporter" value="#gajendra 2.O" />
+      </div>
+    </div>
 
-    <script>
-      // ═══════════════════════════════════════════════════════════════
-      //  ██████╗ ██████╗ ███╗   ██╗███████╗██╗ ██████╗
-      // ██╔════╝██╔═══██╗████╗  ██║██╔════╝██║██╔════╝
-      // ██║     ██║   ██║██╔██╗ ██║█████╗  ██║██║  ███╗
-      // ██║     ██║   ██║██║╚██╗██║██╔══╝  ██║██║   ██║
-      // ╚██████╗╚██████╔╝██║ ╚████║██║     ██║╚██████╔╝
-      //  ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝     ╚═╝ ╚═════╝
-      //
-      //  👇 FIND "CONFIG — EDIT HERE" TO PLACE YOUR FIXED PROMPT
-      // ═══════════════════════════════════════════════════════════════
+    <hr class="divider" />
 
-      // ─────────────────────────────────────────────────────────────
-      //  🔧  CONFIG — EDIT HERE
-      //      1. API_KEY  : leave "" to always ask user via modal
-      //                   OR paste your key here to hard-code it
-      //                   (NOT recommended for public GitHub Pages)
-      //      2. FIXED_PROMPT_TEMPLATE : your exact fixed prompt.
-      //         Use these placeholders (they get replaced at runtime):
-      //           {{NEWS_TEXT}}    — the raw news text user pasted
-      //           {{CATEGORY}}     — e.g. "news", "tribute", etc.
-      //           {{ACCENT_COLOR}} — hex color for the category
-      //           {{REPORTER}}     — reporter handle string
-      //           {{HAS_IMAGE}}    — "true" / "false"
-      // ─────────────────────────────────────────────────────────────
+    <!-- BOTH mode progress -->
+    <div class="progress-wrap" id="progress-wrap">
+      <div class="section-label">GENERATION PROGRESS</div>
+      <div class="progress-step" id="step-img"><span class="dot"></span><span>Step 1 — AI Image Generation</span></div>
+      <div class="progress-step" id="step-anj"><span class="dot"></span><span>Step 2 — anjaniya.in Card</span></div>
+      <div class="progress-step" id="step-man"><span class="dot"></span><span>Step 3 — mandla.in Card</span></div>
+    </div>
 
-      const HARDCODED_API_KEY = "AIzaSyDRM9GjUl0aa6jZbveoWkxGxqdkFqyoDn0"; // ← paste key here to skip modal, or leave ""
+    <button class="btn-generate" id="gen-btn">
+      <div class="spinner" id="spinner"></div>
+      <span id="btn-label">GENERATE CARD →</span>
+    </button>
+    <div id="status"></div>
+  </div>
 
-      const FIXED_PROMPT_TEMPLATE = `
-You are a news card designer for "anjaniya.in" — a community 
-news page for the Anjaniya community in Mandla, Madhya Pradesh.
+  <!-- RIGHT PANEL -->
+  <div class="preview-area" id="preview-area"></div>
+</main>
 
-I will give you a news image or news text. Generate a complete 
-single-file HTML news card post for Instagram.
+<script>
+// ═══════════════════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════════════════
+// FIX: API key should never be hardcoded in source.
+// Load from localStorage only; prompt user if missing.
+const GEMINI_MODEL = "gemini-2.5-flash-preview-04-17"; // FIX: correct model string
 
-═══ STRICT RULES (UNCHANGED) ═══
+const ACCENT_MAP = {
+  news: "#b8240f", environment: "#1a6b2f", water: "#1a7bb8",
+  development: "#d4580a", tribute: "#c9932a", social: "#7a2d8c",
+  sports: "#1a6b2f", education: "#1a4a8a", national: "#1a4a8a", jayanti: "#8a6000"
+};
 
-1. ALWAYS rewrite news content in your own words — never copy 
-   word-for-word from any source (copyright protection)
+// FIX: separate accent map for mandla (was duplicated inside prompt function, now centralised)
+const MANDLA_ACCENT_MAP = {
+  news: "#b8240f", environment: "#0e6655", water: "#1a6b9a",
+  development: "#c45e0a", tribute: "#c9932a", social: "#6a2d8c",
+  sports: "#1a6b2f", education: "#1a4a8a", national: "#1a4a8a", jayanti: "#8a6000"
+};
+
+// ═══════════════════════════════════════════════════════
+//  PROMPTS
+// ═══════════════════════════════════════════════════════
+function getAnjaniyaPrompt(newsText, category, accent, reporter, hasImage, imageInstruction) {
+  return `You are a news card designer for "anjaniya.in" — a community news page for the Anjaniya community in Mandla, Madhya Pradesh.
+
+Generate a complete single-file HTML news card post for Instagram.
+
+═══ NEWS INPUT ═══
+${newsText}
+
+${imageInstruction}
+
+═══ SETTINGS ═══
+Category: ${category}
+Accent Color: ${accent}
+Reporter: ${reporter}
+Has Image: ${hasImage}
+
+═══ STRICT RULES ═══
+1. ALWAYS rewrite news content in your own words — copyright protection
 2. ALWAYS write in BOTH English + Hindi (Noto Sans Devanagari)
 3. Hindi must be font-weight 800-900, color #111, always visible
-4. Use the exact CSS structure below — no changes to layout
-5. ALWAYS generate 3 outputs: HTML card + Instagram caption + hashtags
+4. Generate 3 outputs: HTML card + Instagram caption + hashtags
 
-═══ CARD SIZE & RATIO (UNCHANGED) ═══
-
+═══ CARD SIZE & RATIO ═══
 - width: 580px, max-width: 100%
 - aspect-ratio: 4/5 (Instagram portrait)
 - display: flex; flex-direction: column
 - All sections: flex-shrink: 0
 - Image section ONLY: flex: 1; min-height: 0
 
-════════════════════════════════════════
-NEW ADDITION 1 — EXTENDED COLOR THEMES
-════════════════════════════════════════
+════════ COLOR THEMES ════════
+News/Protest/Crime → --accent: #b8240f
+Environment/Nature → --accent: #1a6b2f
+Water/Welfare → --accent: #1a7bb8
+Development/Good → --accent: #d4580a
+Tribute/Death → DARK ROYAL: bg #0f0d0a, gold #c9932a
+Social/Women → --accent: #7a2d8c
+Sports → --accent: #1a6b2f
+Education → --accent: #1a4a8a
+Jayanti → --accent: #8a6000
 
-News/Protest/Crime/Accident → --accent: #b8240f (deep red)
-  Top line: linear-gradient(90deg, #8a0e06, #d4360f, #8a0e06)
-  Alert bg: #b8240f | Grid tint: #fff8f8
+SELECTED THEME ACCENT: ${accent}
 
-Environment/Nature/Wildlife → --accent: #1a6b2f (forest green)
-  Top line: linear-gradient(90deg, #0d3d1a, #2d9a4a, #0d3d1a)
-  Alert bg: #1a6b2f | Grid tint: #f0f8f2
-
-Water/Welfare/Health → --accent: #1a7bb8 (blue)
-  Top line: linear-gradient(90deg, #0d4a78, #2a9be0, #0d4a78)
-  Alert bg: #1a7bb8 | Grid tint: #eaf4fb
-
-Development/Good News → --accent: #d4580a (saffron)
-  Top line: linear-gradient(90deg, #8a3200, #e87020, #8a3200)
-  Alert bg: #d4580a | Grid tint: #fff5ed
-
-Tribute/Death → DARK ROYAL THEME:
-  bg: #0f0d0a | card: #161310 | text: #f0e8d8
-  --accent: #c9932a (dark gold)
-  Top line: linear-gradient(90deg, #7a5518, #c9932a, #e8b84b, #c9932a, #7a5518)
-  Alert bg: #111 | Alert text: #e8b84b
-
-Inspiration/Social/Women → --accent: #7a2d8c (purple)
-  Top line: linear-gradient(90deg, #4a1a5c, #9e3aaf, #4a1a5c)
-  Alert bg: linear-gradient(90deg, #7a2d8c, #d4580a)
-  Grid tint: #f8f0fc
-
-── NEW FESTIVAL & JAYANTI THEMES ──────
-
-🪔 DIWALI / DEEPOTSAV:
-  --accent: #d4a017 (gold)
-  --accent2: #c4300a (deep red)
-  bg: #1a0a00 | card: #0f0600
-  Top line: linear-gradient(90deg, #8a6000, #d4a017, #f5c518, #d4a017, #8a6000)
-  Alert bg: #8a3200 (deep maroon)
-  Alert text strip: "🪔 DIWALI SPECIAL · दीपावली विशेष · ANJANIYA"
-  Body: Dark card, cream text, gold accents, red-orange highlights
-
-🎊 HOLI:
-  --accent: #e8320a (red)
-  Top line: linear-gradient(90deg, #e8320a, #f5c518, #2aaa4a, #1a7bb8, #e8320a)
-  Alert bg: linear-gradient(90deg, #e8320a, #f5c518, #2aaa4a)
-  Grid tiles: each tile different pastel background
-  Special: Add "🎨 रंगों की शुभकामनाएं" message bar
-
-🏹 NAVRATRI / DURGA PUJA:
-  --accent: #c4300a (deep red-orange)
-  bg: #fff5e8 | card: #ffffff
-  Top line: linear-gradient(90deg, #8a1a00, #c4300a, #f5a020, #c4300a, #8a1a00)
-  Alert bg: #c4300a
-  Grid tint: #fff0e0
-
-🕉️ EID / FESTIVALS (Secular):
-  --accent: #0e6655 (green)
-  bg: #f0fff8 | card: #ffffff
-  Top line: linear-gradient(90deg, #0a3d32, #0e6655, #1aaa88, #0e6655, #0a3d32)
-
-☀️ MAKAR SANKRANTI / PONGAL:
-  --accent: #d4580a (saffron-orange)
-  Top line: linear-gradient(90deg, #7a2800, #d4580a, #f5c518, #d4580a, #7a2800)
-
-🌿 AMBEDKAR JAYANTI / REPUBLIC DAY / NATIONAL DAYS:
-  --accent: #1a4a8a (deep blue — tricolor theme)
-  Top line: linear-gradient(90deg, #ff6600, #ffffff, #006633, #ffffff, #ff6600)
-  Alert bg: #1a4a8a
-  Fact grid: tint with very light tricolor feel
-
-🌟 BIRTHDAY / JAYANTI (General leaders/saints):
-  --accent: #8a6000 (royal gold)
-  bg: #fffbf0 | card: #ffffff
-  Top line: linear-gradient(90deg, #5a3a00, #c9932a, #f5e090, #c9932a, #5a3a00)
-  Alert strip: dark maroon #4a1a00
-  Grid tint: #fdf8e8
-
-🎓 EDUCATION / RESULTS / ACHIEVEMENT:
-  --accent: #1a4a8a (academic blue)
-  Top line: linear-gradient(90deg, #0a2050, #1a6ab8, #4a9ae8, #1a6ab8, #0a2050)
-  Alert bg: #1a4a8a | Grid tint: #eef4ff
-
-🏟️ SPORTS / TOURNAMENTS:
-  --accent: #1a6b2f (sport green)
-  Top line: linear-gradient(90deg, #0a3018, #1a8a3a, #40c060, #1a8a3a, #0a3018)
-
-════════════════════════════════════════
-NEW ADDITION 2 — HIGH QUALITY DOWNLOAD
-════════════════════════════════════════
-
-Replace the standard download button with this 
-HIGH QUALITY version that exports at true 4K Instagram quality:
-
-<!-- Load html2canvas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>
-
-<!-- Load jsPDF for PDF option -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>
-
-<div class="dl-row">
-  <button class="dl-btn" id="dl-png" onclick="downloadPNG()">
-    ⬇ DOWNLOAD PNG (HIGH QUALITY)
-  </button>
-  <button class="dl-btn dl-pdf" id="dl-pdf" onclick="downloadPDF()">
-    📄 SAVE AS PDF
-  </button>
-</div>
-<p class="hint">1080×1350px · Instagram portrait · Print quality</p>
-
-.dl-row {
-  width: 580px; max-width: 100%;
-  display: flex; gap: 8px;
-}
-.dl-btn {
-  flex: 1; background: #111; color: #fff;
-  border: none; border-radius: 6px; padding: 14px 0;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 15px; letter-spacing: 2.5px; cursor: pointer;
-  transition: background 0.2s;
-}
-.dl-btn:hover { background: #333; }
-.dl-btn.dl-pdf { background: #1a4a8a; }
-.dl-btn.dl-pdf:hover { background: #2a6ad8; }
-
-<script>
-// HIGH QUALITY PNG — 1080×1350px true resolution
-async function downloadPNG() {
-  const btn = document.getElementById('dl-png');
-  btn.textContent = '⏳ RENDERING HQ...';
-  btn.disabled = true;
-  const card = document.getElementById('post-card');
-  
-  // Calculate exact scale for 1080px output
-  const targetWidth = 1080;
-  const scale = targetWidth / card.offsetWidth;
-  
-  try {
-    const canvas = await html2canvas(card, {
-      scale: scale,           // exact 1080px
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      imageTimeout: 0,        // no timeout for HQ
-      width: card.offsetWidth,
-      height: card.offsetHeight,
-      windowWidth: card.offsetWidth,
-      windowHeight: card.offsetHeight,
-      x: 0, y: 0,
-    });
-    
-    // Export as high quality PNG
-    canvas.toBlob((blob) => {
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.download = 'anjaniya-post-HQ.png';
-      link.href = url;
-      link.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png', 1.0);   // quality 1.0 = maximum
-    
-    btn.textContent = '✅ DOWNLOADED HQ!';
-    setTimeout(() => {
-      btn.textContent = '⬇ DOWNLOAD PNG (HIGH QUALITY)';
-      btn.disabled = false;
-    }, 2500);
-  } catch(e) {
-    btn.textContent = '❌ ERROR — TRY AGAIN';
-    btn.disabled = false;
-    console.error(e);
-  }
-}
-
-// PDF EXPORT — Print quality
-async function downloadPDF() {
-  const btn = document.getElementById('dl-pdf');
-  btn.textContent = '⏳ CREATING PDF...';
-  btn.disabled = true;
-  const card = document.getElementById('post-card');
-  
-  try {
-    const canvas = await html2canvas(card, {
-      scale: 2,              // 2x for PDF clarity
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      imageTimeout: 0,
-      width: card.offsetWidth,
-      height: card.offsetHeight,
-    });
-    
-    const imgData = canvas.toDataURL('image/png', 1.0);
-    const { jsPDF } = window.jspdf;
-    
-    // Instagram 4:5 ratio in mm
-    const pdf = new jsPDF({
-      orientation: 'portrait',
-      unit: 'mm',
-      format: [108, 135],    // 4:5 ratio in cm
-    });
-    
-    pdf.addImage(imgData, 'PNG', 0, 0, 108, 135);
-    pdf.save('anjaniya-post.pdf');
-    
-    btn.textContent = '✅ PDF SAVED!';
-    setTimeout(() => {
-      btn.textContent = '📄 SAVE AS PDF';
-      btn.disabled = false;
-    }, 2500);
-  } catch(e) {
-    btn.textContent = '❌ ERROR — TRY AGAIN';
-    btn.disabled = false;
-  }
-}
-<\/script>
-
-════════════════════════════════════════
-NEW ADDITION 3 — POST CONTEXT OUTPUT
-════════════════════════════════════════
-
-CRITICAL: After generating the HTML, ALWAYS also output 
-a complete POST CONTEXT section formatted exactly like this:
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📱 POST CONTEXT FOR INSTAGRAM
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📋 CAPTION (copy-paste ready):
-
-[3-5 lines in Hindi — bold key phrases]
-[1-2 lines in English below]
-[Call to action line]
-[Emoji-rich, conversational, community tone]
-
-Example format:
-🔥 मंडला में बड़ी खबर!
-
-रानी दुर्गावती महाविद्यालय के छात्रों ने 
-मूलभूत सुविधाओं की मांग को लेकर 
-जोरदार प्रदर्शन किया। ✊
-
-ABVP के नेतृत्व में प्राचार्य को मांगपत्र सौंपा —
-मांगें पूरी न हुईं तो आंदोलन तेज होगा! 🔥
-
-Students of Mandla's Rani Durgavati College 
-protest for basic facilities.
-
-आपकी राय क्या है? Comment में बताएं 👇
-Share करें ताकि आवाज़ पहुंचे! 📢
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-#️⃣ HASHTAGS (30 max — copy-paste ready):
-
-Primary (always include):
-#AnjaniyaIN #anjaniyain #अंजनिया #Anjaniya
-
-Location tags:
-#Mandla #मंडला #MadhyaPradesh #मध्यप्रदेश #MPNews
-
-Topic tags (auto-generate based on news):
-[5-8 relevant Hindi + English hashtags]
-
-Trending boost tags:
-#LocalNews #IndiaNews #BreakingNews #Viral
-
-Example for student protest:
-#AnjaniyaIN #अंजनिया #Mandla #मंडला #MPNews
-#ChatraAandolan #छात्रआंदोलन #ABVP #StudentProtest
-#RaniDurgavatiCollege #मध्यप्रदेश #LocalNews
-#BreakingNews #IndiaFirst
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-⏰ BEST TIME TO POST:
-[Suggest based on news type]
-- Breaking news → Post immediately
-- Morning news → 7:00-9:00 AM
-- Community events → 6:00-8:00 PM  
-- Tribute posts → 8:00-10:00 AM
-
-📊 POST TYPE: [Feed Post / Reel Cover / Story]
-
-🎯 TARGET AUDIENCE: 
-[Anjaniya community / Students / General Mandla / All MP]
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-════════════════════════════════════════
-EXISTING STRUCTURE (ALL UNCHANGED)
-════════════════════════════════════════
-
-DEFAULT CSS VARS (light theme):
+════════ DEFAULT CSS VARS ════════
 --bg: #edeae4
 --card: #ffffff
 --surface: #f5f2ee
 --border: #ddd9d2
---text: #111
---muted: #555
---dim: #999
+--text: #111 --muted: #555 --dim: #999
 
-FONTS: Bebas Neue + DM Sans + Noto Sans Devanagari
+════════ FONTS ════════
+Bebas Neue → brand, headlines EN
+DM Sans 400/600/700 → English body
+Noto Sans Devanagari 400/700/900 → ALL Hindi text
 
-CARD SECTIONS (top to bottom):
-1. TOP BAR — brand left, source tag right
-2. ALERT STRIP — accent bg, blinking dot, category text
-3. HEADLINE — small EN caps + big HI 900 weight
-4. IMAGE WRAP — flex:1, photo + overlay + watermark
-5. 2×2 FACT GRID — 4 tiles, icon + HI text + EN sub
-6. SUB TEXT — accent left bar + EN para + HI bold para
-7. SPECIAL BAR — demand/inspire/message line
-8. CREDIT ROW — source left + location pill right
-9. BOTTOM BAR — socials + date + brand
+════════ CARD SECTIONS (top to bottom) ════════
+1. TOP BAR — "anjaniya.in" brand left (.in in accent), source pill right
+2. ALERT STRIP — accent bg, blinking yellow dot, category label Bebas 12px
+3. HEADLINE — small EN 12px Bebas + big HI 21px Noto 900 weight
+4. IMAGE WRAP — flex:1 min-height:0, img cover + dark overlay bottom + "anjaniya.in" watermark bottom-right
+5. 2×2 FACT GRID — 4 tiles, emoji icon + HI text Noto 11px 800 + EN sub 9.5px
+6. SUB TEXT — 2.5px left accent bar, EN 11.5px 600, HI Noto 13px 800 #111
+7. SPECIAL BAR — demand/message line, icon + HI Noto 12px 900 in accent
+8. CREDIT ROW — source left, "📍 अंजनिया, मंडला" pill right border-radius 20px
+9. BOTTOM BAR — 5 social icons 22×22px, date center (Bebas EN + Noto HI), "anjaniya.in" brand right
 
-TOP ACCENT LINE:
-card::before → 3px gradient using --accent color
+════════ TOP ACCENT LINE ════════
+card::before → 3px gradient: linear-gradient(90deg, darker-accent, accent, darker-accent)
 
-HINDI RULES:
-- Every section: English first, Hindi second
+════════ HQ DOWNLOAD BUTTONS ════════
+Include BOTH:
+1. PNG button — html2canvas at 1080px scale
+2. PDF button — jsPDF 4:5 ratio
+
+CDNs:
+html2canvas: https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
+jsPDF: https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
+
+Button styles: Bebas Neue 15px, letter-spacing 2.5px, black bg, width 580px, border-radius 6px, padding 14px
+Download filename: "anjaniya-post-HQ.png"
+
+════════ HINDI RULES ════════
+- Both EN + HI in every section
 - Noto Sans Devanagari ALWAYS 800-900 weight
-- Color: #111 body, --accent for highlights
-- Dates: Devanagari numerals — १७ अप्रैल, २०२६
+- Color #111, --accent for highlights
+- Dates in Devanagari numerals: १७ मई, २०२६
 
-COPYRIGHT RULES:
+════════ COPYRIGHT ════════
 - Rewrite all content completely
-- No more than 4 original words in a row
 - Credit source in credit row
 
-BODY WRAPPER:
-body {
-  background: var(--bg);
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 40px 20px;
-  gap: 16px;
+════════ BODY WRAPPER ════════
+body { background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 16px; }
+
+════════ OUTPUT FORMAT ════════
+Output in this exact order:
+1. Complete single-file HTML (all CSS+JS inline, no external except Google Fonts + CDN scripts)
+2. POST CONTEXT section:
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 POST CONTEXT FOR INSTAGRAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 CAPTION (copy-paste ready):
+[3-5 lines Hindi bold + 1-2 English + call to action]
+
+#️⃣ HASHTAGS (30 max):
+Primary: #AnjaniyaIN #anjaniyain #अंजनिया
+Location: #Mandla #मंडला #MadhyaPradesh #MPNews
+Topic: [5-8 relevant]
+Boost: #LocalNews #IndiaNews #BreakingNews
+
+⏰ BEST TIME TO POST: [based on news type]
+📊 POST TYPE: [Feed Post / Reel Cover / Story]
+🎯 TARGET AUDIENCE: [community/students/general]
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+GENERATE NOW — Output ONLY HTML + post context, nothing else.`.trim();
 }
 
-════════════════════════════════════════
-FINAL OUTPUT FORMAT
-════════════════════════════════════════
+function getMandlaPrompt(newsText, category, accent, reporter, hasImage, imageInstruction) {
+  return `You are a news card designer for "mandla.in" — a community news page for Mandla district, Madhya Pradesh. Tagline: "Exploring the heart of Mandla — From Narmada Ghats to Urban Growth."
 
+Generate a complete single-file HTML news card post for Instagram.
+
+═══ NEWS INPUT ═══
+${newsText}
+
+${imageInstruction}
+
+═══ SETTINGS ═══
+Category: ${category}
+Accent Color: ${accent}
+Reporter: ${reporter}
+Has Image: ${hasImage}
+
+═══ PAGE IDENTITY ═══
+Page Name: mandla.in
+Tagline: "Exploring the heart of Mandla"
+Sub-tagline: "From Narmada Ghats to Urban Growth"
+Brand: mandla.in — ".in" always in accent color
+Footer: "MANDLA KI KHABAR · मंडला की खबर"
+
+═══ STRICT RULES ═══
+1. ALWAYS rewrite news content in your own words
+2. ALWAYS write in BOTH English + Hindi (Noto Sans Devanagari)
+3. Hindi must be font-weight 800-900, color #111
+4. Brand is "mandla.in" NOT "anjaniya.in" — every instance
+
+═══ CARD SIZE & RATIO ═══
+- width: 580px, max-width: 100%
+- aspect-ratio: 4/5 (Instagram portrait)
+- display: flex; flex-direction: column
+- Image section ONLY: flex: 1; min-height: 0
+
+════════ COLOR THEMES ════════
+News/Crime/Protest → #b8240f
+Environment/Nature → #0e6655 (Narmada teal)
+Water/Narmada → #1a6b9a (river blue)
+Development → #c45e0a (warm saffron)
+Tribute → Dark royal bg #0a0d0f, gold #c9932a
+Social → #6a2d8c
+
+SELECTED ACCENT: ${accent}
+
+════════ DEFAULT CSS VARS ════════
+--bg: #e8ede8 (slight green tint — Narmada feel)
+--card: #ffffff
+--surface: #f2f5f2
+--border: #d4dad4
+--text: #111 --muted: #555 --dim: #999
+
+════════ FONTS ════════
+Bebas Neue → brand, headlines EN
+DM Sans 400/600/700 → English body
+Noto Sans Devanagari 400/700/900 → ALL Hindi text
+
+════════ CARD SECTIONS (top to bottom) ════════
+1. TOP BAR — "mandla.in" brand left (.in in accent), "Source: Patrika · मंडला" pill right
+2. ALERT STRIP — accent bg, blinking yellow dot, "MANDLA NEWS · मंडला खबर · DISTRICT UPDATE" Bebas 12px
+3. HEADLINE — small EN 12px Bebas + big HI 21px Noto 900
+4. IMAGE WRAP — flex:1 min-height:0, img cover + dark overlay + "mandla.in" watermark bottom-right (.in in #f5c518)
+5. 2×2 CONTENT GRID — 4 tiles, emoji + HI Noto 11px 800 + EN sub 9.5px
+6. SUB TEXT — 2.5px left accent bar, EN 11.5px 600, HI Noto 13px 800 #111
+7. SPECIAL BAR — demand/message line, icon + HI Noto 12px 900 in accent
+8. CREDIT ROW — source left, "📍 मंडला, म.प्र." pill right border-radius 20px
+9. BOTTOM BAR — 5 social icons 22×22px, date center, "mandla.in" brand right
+   Below brand: "MANDLA KI KHABAR · मंडला की खबर" 7px muted
+
+════════ TOP ACCENT LINE ════════
+card::before → 3px gradient using Narmada teal or selected accent
+
+════════ HQ DOWNLOAD BUTTONS ════════
+Include BOTH:
+1. PNG button — html2canvas at 1080px scale
+2. PDF button — jsPDF
+
+CDNs:
+html2canvas: https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js
+jsPDF: https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js
+
+Button styles: Bebas Neue 15px, letter-spacing 2.5px, black bg, width 580px, border-radius 6px
+Download filename: "mandla-post-HQ.png"
+
+════════ HINDI RULES ════════
+- Noto Sans Devanagari ALWAYS 800-900 weight, color #111
+- Dates: Devanagari numerals १७ मई, २०२६
+
+════════ BODY WRAPPER ════════
+body { background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; gap: 16px; }
+
+════════ OUTPUT FORMAT ════════
 Output in this exact order:
+1. Complete single-file HTML (all CSS+JS inline)
+2. POST CONTEXT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 POST CONTEXT FOR INSTAGRAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 CAPTION:
+[3-5 lines Hindi bold + 1-2 English + CTA]
 
-1. [COMPLETE HTML FILE — single file, all CSS+JS inline]
+#️⃣ HASHTAGS (30 max):
+Primary: #MandlaIN #mandlain #मंडला #MandlaDistrict
+Location: #Mandla #MadhyaPradesh #MPNews #NarmadaKinara
+Topic: [5-8 relevant]
+Boost: #LocalNews #IndiaNews #BreakingNews
 
-2. [POST CONTEXT SECTION as formatted above]
-   - Caption (Hindi + English)
-   - 30 hashtags
-   - Best posting time
-   - Post type
-   - Target audience
+⏰ BEST TIME TO POST:
+📊 POST TYPE:
+🎯 TARGET AUDIENCE:
+━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-═══ NOW GENERATE ═══
+GENERATE NOW — Output ONLY HTML + post context.`.trim();
+}
 
-From the news I provide:
-1. Identify category → pick correct color theme
-2. Extract facts → rewrite completely
-3. Generate full HTML with HQ download buttons
-4. Output POST CONTEXT with caption + hashtags
-5. Output ONLY HTML + post context — nothing else
+function buildImageGenPrompt(newsText, category, brand, extraInstructions) {
+  const locationContext = brand === 'mandla'
+    ? "Mandla district, Madhya Pradesh — near Narmada river, forests, tribal culture, Kanha wildlife"
+    : "Anjaniya community area near Mandla, Madhya Pradesh — rural village, community gatherings, local life";
 
+  const categoryVisuals = {
+    news: "news event scene, protest gathering, community assembly, government building",
+    environment: "lush Indian forest, wildlife, river, nature landscape",
+    water: "Narmada river ghats, water body, flood scene, villagers near water",
+    development: "construction site, inauguration ceremony, new infrastructure, celebration",
+    tribute: "formal portrait-style background, marigold flowers, memorial setting",
+    social: "women empowerment gathering, community celebration, social event",
+    sports: "sports ground, tournament, athletes in action, stadium",
+    education: "school building, students, examination hall, academic setting",
+    national: "national flag, tricolor theme, parade, Republic Day celebration",
+    jayanti: "garland background, formal portrait setting, birth anniversary celebration"
+  };
 
+  return `Create a photorealistic news photograph for an Indian community news Instagram post.
 
+CONTEXT:
+News: ${newsText.substring(0, 300)}
+Location: ${locationContext}
+Category visual: ${categoryVisuals[category] || "local Indian news scene"}
+${extraInstructions ? `Extra instructions: ${extraInstructions}` : ""}
 
+REQUIREMENTS:
+- Style: Photorealistic news photography or editorial illustration
+- Setting: Authentic Indian rural/district context (Madhya Pradesh, central India)
+- Mood: Relevant to the news category — ${category}
+- Lighting: Natural, realistic, daytime preferred unless tribute (soft warm)
+- NO text overlays, NO watermarks, NO logos in the image
+- Composition: Wide shot or medium shot suitable for Instagram 4:5 crop
+- People if shown: Indian appearance, contextually appropriate clothing
+- Quality: High resolution, sharp, vibrant but realistic colors
 
+Generate ONE clean, high-quality image representing this news story.`;
+}
 
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+let apiKey = localStorage.getItem("gemini_api_key") || "";
+let currentBrand = "anjaniya";
+let imgMode = "upload";
+let imageBase64 = null;
+let imageMime = null;
+let outputAnjaniya = "";
+let outputMandla = "";
 
-════════════════════════════════════════
-🎨 COLOR THEME REFERENCE SYSTEM
-════════════════════════════════════════
+// ── API KEY MODAL ──
+const modal = document.getElementById("api-modal");
+const apiInput = document.getElementById("api-key-input");
 
-When generating a news card, FIRST identify the category 
-and APPLY the exact color theme below:
+function showModal() { modal.classList.remove("hidden"); apiInput.value = apiKey; apiInput.focus(); }
+function hideModal() { modal.classList.add("hidden"); }
 
-🔴 NEWS / CRIME / PROTEST / ACCIDENT
-- anjaniya.in → #b8240f
-- mandla.in → #b8240f
-- Alert strip: Red
-- Grid tint: #fff8f8
+// FIX: show modal only when key is actually missing
+if (!apiKey) showModal();
 
-🟢 NATURE / ENVIRONMENT / WILDLIFE
-- anjaniya.in → #1a6b2f
-- mandla.in → #0e6655
-- Alert strip: Dark green
-- Grid tint: #f0f8f2
+document.getElementById("save-key-btn").addEventListener("click", () => {
+  const v = apiInput.value.trim();
+  if (!v) { alert("Please enter a valid API key."); return; }
+  apiKey = v;
+  localStorage.setItem("gemini_api_key", v);
+  hideModal();
+});
 
-🔵 WATER / HEALTH / WELFARE
-- anjaniya.in → #1a7bb8
-- mandla.in → #1a6b9a
-- Alert strip: Blue
-- Grid tint: #eaf4fb
+apiInput.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("save-key-btn").click(); });
+document.getElementById("change-key-btn").addEventListener("click", showModal);
 
-🟠 DEVELOPMENT / GOOD NEWS
-- anjaniya.in → #d4580a
-- mandla.in → #c45e0a
-- Alert strip: Saffron
-- Grid tint: #fff5ed
+// ── BRAND SWITCHER ──
+function setBrand(brand) {
+  currentBrand = brand;
+  document.getElementById("btn-anj").className = "brand-btn" + (brand === "anjaniya" ? " active-anj" : "");
+  document.getElementById("btn-man").className = "brand-btn" + (brand === "mandla" ? " active-man" : "");
+  document.getElementById("btn-both").className = "brand-btn" + (brand === "both" ? " active-both" : "");
 
-🟡 TRIBUTE / DEATH
-- Accent (both): #c9932a (Gold)
-- Alert strip: Near black
-- Grid tint: #161310
-- Use dark royal theme (dark background + gold text)
+  const genBtn = document.getElementById("gen-btn");
+  const btnLabel = document.getElementById("btn-label");
+  const progressWrap = document.getElementById("progress-wrap");
 
-💜 SOCIAL / WOMEN / INSPIRATION
-- anjaniya.in → #7a2d8c
-- mandla.in → #6a2d8c
-- Alert strip: Purple
-- Grid tint: #f8f0fc
+  if (brand === "both") {
+    genBtn.className = "btn-generate both-mode";
+    btnLabel.textContent = "GENERATE BOTH →";
+    progressWrap.style.display = "flex";
+  } else {
+    genBtn.className = "btn-generate";
+    btnLabel.textContent = "GENERATE CARD →";
+    progressWrap.style.display = "none";
+  }
+  initPreviewArea();
+}
 
-🪔 DIWALI / DEEPOTSAV
-- Accent: #d4a017 (Gold)
-- Alert strip: Maroon
-- Grid tint: Dark cream
-- Use dark festive theme (warm glow)
+// ── IMAGE MODE ──
+function setImgMode(mode) {
+  imgMode = mode;
+  const activeStyle = "flex:1;background:rgba(232,83,26,0.15);border-color:var(--accent);color:var(--accent);";
+  ["upload", "generate", "none"].forEach(m => {
+    document.getElementById("mode-" + m + "-btn").style.cssText = "flex:1;";
+  });
+  document.getElementById("mode-" + mode + "-btn").style.cssText = activeStyle;
+  document.getElementById("upload-section").style.display = mode === "upload" ? "block" : "none";
+  document.getElementById("generate-section").style.display = mode === "generate" ? "block" : "none";
+}
 
-🎊 HOLI
-- Accent: Multicolor
-- Alert strip: Rainbow gradient
-- Grid tint: Pastel tiles (different colors each box)
+document.getElementById("img-input").addEventListener("change", function () {
+  const file = this.files[0];
+  if (!file) return;
+  imageMime = file.type || "image/jpeg";
+  const reader = new FileReader();
+  reader.onload = e => {
+    imageBase64 = e.target.result.split(",")[1];
+    const preview = document.getElementById("img-preview");
+    preview.src = e.target.result;
+    preview.style.display = "block";
+    const zone = document.getElementById("upload-zone");
+    zone.classList.add("has-img");
+    zone.querySelector("p").textContent = file.name;
+  };
+  reader.readAsDataURL(file);
+});
 
-🏹 NAVRATRI / DURGA PUJA
-- Accent: #c4300a
-- Alert strip: Deep red
-- Grid tint: #fff0e0
+// ── PREVIEW AREA ──
+function initPreviewArea() {
+  const area = document.getElementById("preview-area");
+  if (currentBrand === "both") {
+    area.innerHTML = `
+      <div class="preview-dual">
+        <div class="preview-col">
+          <div class="preview-toolbar">
+            <span class="col-label anj">ANJANIYA.IN</span>
+            <span id="info-anj">Waiting...</span>
+            <button class="btn-sm" id="open-anj" disabled onclick="openTab('anj')">⧉ New Tab</button>
+            <button class="btn-sm primary" id="dl-anj" disabled onclick="dlHtml('anj')">↓ HTML</button>
+          </div>
+          <div class="preview-frame" id="frame-anj">
+            <div class="empty-state"><div class="big">📰</div><p>anjaniya.in card<br/>will appear here</p></div>
+          </div>
+        </div>
+        <div class="preview-col">
+          <div class="preview-toolbar">
+            <span class="col-label man">MANDLA.IN</span>
+            <span id="info-man">Waiting...</span>
+            <button class="btn-sm" id="open-man" disabled onclick="openTab('man')">⧉ New Tab</button>
+            <button class="btn-sm teal-btn" id="dl-man" disabled onclick="dlHtml('man')">↓ HTML</button>
+          </div>
+          <div class="preview-frame man-bg" id="frame-man">
+            <div class="empty-state"><div class="big">🌊</div><p>mandla.in card<br/>will appear here</p></div>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    const isMandla = currentBrand === "mandla";
+    area.innerHTML = `
+      <div class="single-preview">
+        <div class="single-toolbar">
+          <span class="col-label ${isMandla ? "man" : "anj"}">${isMandla ? "MANDLA.IN" : "ANJANIYA.IN"}</span>
+          <span id="toolbar-info">Output will appear here after generation</span>
+          <button class="btn-sm" id="open-tab-btn" disabled>⧉ New Tab</button>
+          <button class="btn-sm" id="copy-html-btn" disabled>⎘ Copy HTML</button>
+          <button class="btn-sm ${isMandla ? "teal-btn" : "primary"}" id="download-btn" disabled>↓ HTML</button>
+        </div>
+        <div class="preview-frame ${isMandla ? "man-bg" : ""}" id="single-frame">
+          <div class="empty-state">
+            <div class="big">${isMandla ? "🌊" : "📰"}</div>
+            <p>Enter news text and click<br/><strong>Generate Card</strong></p>
+          </div>
+        </div>
+      </div>`;
 
-🇮🇳 NATIONAL DAYS (Republic / Independence)
-- Accent: #1a4a8a
-- Alert strip: Deep blue
-- Grid tint: Tricolor theme
+    document.getElementById("open-tab-btn").addEventListener("click", () => {
+      const html = currentBrand === "mandla" ? outputMandla : outputAnjaniya;
+      if (html) { const w = window.open("", "_blank"); w.document.open(); w.document.write(html); w.document.close(); }
+    });
+    document.getElementById("copy-html-btn").addEventListener("click", async () => {
+      const html = currentBrand === "mandla" ? outputMandla : outputAnjaniya;
+      if (!html) return;
+      await navigator.clipboard.writeText(html);
+      const btn = document.getElementById("copy-html-btn");
+      btn.textContent = "✓ Copied!";
+      setTimeout(() => { btn.textContent = "⎘ Copy HTML"; }, 2000);
+    });
+    document.getElementById("download-btn").addEventListener("click", () => {
+      const html = currentBrand === "mandla" ? outputMandla : outputAnjaniya;
+      if (html) downloadHtml(html, (currentBrand === "mandla" ? "mandla" : "anjaniya") + "-card-" + Date.now() + ".html");
+    });
+  }
+}
 
-🌟 JAYANTI / BIRTHDAY (Leaders / Saints)
-- Accent: #8a6000 (Royal gold)
-- Alert strip: Maroon
-- Grid tint: #fdf8e8
+// ── HELPERS ──
+function openTab(brand) {
+  const html = brand === "man" ? outputMandla : outputAnjaniya;
+  if (!html) return;
+  const w = window.open("", "_blank"); w.document.open(); w.document.write(html); w.document.close();
+}
+function dlHtml(brand) {
+  const html = brand === "man" ? outputMandla : outputAnjaniya;
+  if (html) downloadHtml(html, (brand === "man" ? "mandla" : "anjaniya") + "-card-" + Date.now() + ".html");
+}
+function downloadHtml(html, filename) {
+  const a = document.createElement("a");
+  a.href = "data:text/html;charset=utf-8," + encodeURIComponent(html);
+  a.download = filename;
+  a.click();
+}
+// FIX: safe iframe rendering — content is sandboxed, scripts allowed only for download buttons
+function renderInFrame(frameId, html) {
+  const frame = document.getElementById(frameId);
+  frame.innerHTML = "";
+  const iframe = document.createElement("iframe");
+  // allow-scripts needed for html2canvas/jsPDF download buttons inside generated card
+  iframe.sandbox = "allow-scripts allow-same-origin allow-downloads";
+  iframe.style.cssText = "width:100%;height:100%;border:none;border-radius:8px;";
+  frame.appendChild(iframe);
+  const doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open(); doc.write(html); doc.close();
+}
 
-🎓 EDUCATION / RESULTS / ACHIEVEMENT
-- Accent: #1a4a8a
-- Alert strip: Academic blue
-- Grid tint: #eef4ff
+function setStatus(msg, type) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = type;
+  el.style.display = msg ? "block" : "none";
+}
 
-🏟️ SPORTS / TOURNAMENT
-- Accent: #1a6b2f
-- Alert strip: Sport green
-- Grid tint: #f0f8f0
+function setStep(stepId, state) {
+  const el = document.getElementById(stepId);
+  el.className = "progress-step" + (state === "active" ? " active" : state === "done" ? " done" : "");
+}
 
-🌊 NARMADA (MANDLA.IN ONLY)
-- Accent: #0e6655 (Teal)
-- Alert strip: Teal
-- Grid tint: #e8f8f5
-- Use special label:
-  "🌊 NARMADA SPECIAL · नर्मदा विशेष"
+// ── AI IMAGE GENERATION ──
+async function generateImage(newsText, category, brand) {
+  const extra = document.getElementById("img-extra-prompt").value.trim();
+  const imgPrompt = buildImageGenPrompt(newsText, category, brand, extra);
 
-════════════════════════════════════════
-RULES:
-════════════════════════════════════════
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        instances: [{ prompt: imgPrompt }],
+        parameters: { sampleCount: 1, aspectRatio: "4:5", safetyFilterLevel: "block_low_and_above" }
+      })
+    }
+  );
 
-1. ALWAYS pick color based on category
-2. NEVER mix two categories
-3. Keep consistency across:
-   - Top gradient
-   - Alert strip
-   - Accent elements
-4. Hindi text must remain bold (#111 or cream in dark mode)
-5. Festival themes override normal categories
-6. Mandla.in can use Narmada theme when relevant
-`.trim();
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error("Image gen failed: " + (err?.error?.message || `HTTP ${res.status}`));
+  }
+  const data = await res.json();
+  const b64 = data?.predictions?.[0]?.bytesBase64Encoded;
+  if (!b64) throw new Error("No image returned from Imagen API");
+  return b64;
+}
 
-      // ─────────────────────────────────────────────────────────────
-      //  END CONFIG
-      // ─────────────────────────────────────────────────────────────
+// ── CARD GENERATION ──
+async function generateCard(prompt, imageB64, mime) {
+  const parts = [];
+  if (imageB64) {
+    parts.push({ inline_data: { mime_type: mime || "image/png", data: imageB64 } });
+  }
+  parts.push({ text: prompt });
 
-      // color map per category
-      const ACCENT_MAP = {
-        news: "#c4390a",
-        environment: "#1a6b2f",
-        water: "#1a7bb8",
-        development: "#d4580a",
-        tribute: "#c9932a",
-      };
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 8192 }
+      })
+    }
+  );
 
-      // ── API KEY MANAGEMENT ──────────────────────────────────────
-      let apiKey =
-        HARDCODED_API_KEY || localStorage.getItem("gemini_api_key") || "";
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error?.message || `HTTP ${res.status}`);
+  }
+  const data = await res.json();
+  // FIX: handle all candidate stop reasons and extract text robustly
+  const raw = (data?.candidates?.[0]?.content?.parts ?? [])
+    .map(p => p?.text || "")
+    .join("\n")
+    .trim()
+    // FIX: case-insensitive fence strip + handle ``` without language tag
+    .replace(/^```(?:html)?\s*/i, "")
+    .replace(/```\s*$/, "")
+    .trim();
 
-      const modal = document.getElementById("api-modal");
-      const apiInput = document.getElementById("api-key-input");
-      const saveKeyBtn = document.getElementById("save-key-btn");
-      const changeKeyBtn = document.getElementById("change-key-btn");
+  if (!raw || !raw.includes("<html")) throw new Error("Unexpected output from Gemini. Try again.");
+  return raw;
+}
 
-      function showModal() {
-        modal.classList.remove("hidden");
-        apiInput.value = apiKey;
-        apiInput.focus();
+// FIX: safe image injection — avoid interpolating base64 into a <script> string (XSS / escaping risk).
+// Instead inject a <style> background or set the img src via a data attribute at parse time.
+function injectImageIntoHTML(html, b64, mime) {
+  if (!b64) return html;
+  const dataUrl = `data:${mime || "image/png"};base64,${b64}`;
+  // Safer: inject a hidden <img id="__newsimg"> and replace blank img tags via DOMContentLoaded
+  // We JSON.stringify the dataUrl to safely escape it for JS string context
+  const safeUrl = JSON.stringify(dataUrl);
+  const injection = `<script>
+document.addEventListener("DOMContentLoaded", function() {
+  var src = ${safeUrl};
+  var wrap = document.querySelector('.img-wrap,[class*="img-wrap"],[id*="img-wrap"]');
+  var target = wrap ? wrap.querySelector("img") : null;
+  if (!target) {
+    var imgs = document.querySelectorAll("img");
+    for (var i = 0; i < imgs.length; i++) {
+      var s = imgs[i].src || "";
+      if (!s || s.includes("placeholder") || s.includes("via.placeholder") || s.includes("example") || s === window.location.href) {
+        target = imgs[i]; break;
       }
-      function hideModal() {
-        modal.classList.add("hidden");
+    }
+  }
+  if (target) target.src = src;
+});
+<\/script>`;
+  return html.replace("</body>", injection + "</body>");
+}
+
+// ── MAIN GENERATE ──
+document.getElementById("gen-btn").addEventListener("click", generate);
+
+async function generate() {
+  if (!apiKey) { showModal(); return; }
+
+  const newsText = document.getElementById("news-text").value.trim();
+  // FIX: require news text always — image-only with generate mode would produce empty prompt
+  if (!newsText) { setStatus("Please enter news text.", "err"); return; }
+
+  const category = document.getElementById("category").value;
+  const reporter = document.getElementById("reporter").value.trim() || "#gajendra 2.O";
+
+  // FIX: each brand uses its own correct accent map
+  const anjAccent = ACCENT_MAP[category] || "#b8240f";
+  const manAccent = MANDLA_ACCENT_MAP[category] || "#b8240f";
+
+  const genBtn = document.getElementById("gen-btn");
+  genBtn.disabled = true;
+  document.getElementById("spinner").style.display = "block";
+  document.getElementById("btn-label").textContent = "Generating…";
+
+  let finalImageB64 = null;
+  let finalImageMime = "image/jpeg";
+  let imageInstruction = "No image provided — design the card without a photo section or use a placeholder.";
+
+  try {
+    // ── IMAGE PHASE ──
+    if (imgMode === "upload" && imageBase64) {
+      finalImageB64 = imageBase64;
+      finalImageMime = imageMime || "image/jpeg";
+      imageInstruction = "An image has been provided as an inline_data attachment above. Use it as the main card photo.";
+
+    } else if (imgMode === "generate") {
+      setStatus("🎨 Generating AI image via Imagen 3…", "info");
+      // FIX: use actual brand for image generation context, not hardcoded 'anjaniya'
+      const imgBrand = currentBrand === "both" ? "mandla" : currentBrand;
+      if (currentBrand === "both") setStep("step-img", "active");
+
+      const genStatus = document.getElementById("img-gen-status");
+      genStatus.style.display = "block";
+      genStatus.style.color = "#5ecf7e";
+      genStatus.style.background = "rgba(14,140,114,0.1)";
+
+      try {
+        finalImageB64 = await generateImage(newsText, category, imgBrand);
+        finalImageMime = "image/png";
+        imageInstruction = "An AI-generated image has been provided as an inline_data attachment above. Use it as the main card photo.";
+        document.getElementById("img-generated-preview").src = `data:image/png;base64,${finalImageB64}`;
+        document.getElementById("img-generated-preview").style.display = "block";
+        genStatus.textContent = "✅ AI image generated!";
+        if (currentBrand === "both") setStep("step-img", "done");
+      } catch (imgErr) {
+        console.warn("Imagen failed:", imgErr);
+        imageInstruction = "Image generation failed — design the card without a photo or use a gradient placeholder.";
+        genStatus.style.color = "#f07050";
+        genStatus.style.background = "rgba(196,57,10,0.1)";
+        genStatus.textContent = "⚠ Image gen failed — continuing without image";
+        if (currentBrand === "both") setStep("step-img", "");
+      }
+    }
+
+    // ── CARD PHASE ──
+    if (currentBrand !== "both") {
+      // Single brand
+      const isMandla = currentBrand === "mandla";
+      setStatus(`⚙ Generating ${isMandla ? "mandla.in" : "anjaniya.in"} card…`, "info");
+      const prompt = isMandla
+        ? getMandlaPrompt(newsText, category, manAccent, reporter, !!finalImageB64, imageInstruction)
+        : getAnjaniyaPrompt(newsText, category, anjAccent, reporter, !!finalImageB64, imageInstruction);
+
+      const html = await generateCard(prompt, finalImageB64, finalImageMime);
+      if (isMandla) outputMandla = html; else outputAnjaniya = html;
+
+      renderInFrame("single-frame", html);
+      document.getElementById("toolbar-info").textContent = "Card generated ✓";
+      ["open-tab-btn", "copy-html-btn", "download-btn"].forEach(id => {
+        document.getElementById(id).disabled = false;
+      });
+      setStatus("✅ Card generated successfully!", "ok");
+
+    } else {
+      // Both brands — sequential to avoid rate limits
+      setStep("step-anj", "active");
+      setStatus("⚙ Generating anjaniya.in card…", "info");
+      document.getElementById("info-anj").textContent = "Generating…";
+      try {
+        const anjPrompt = getAnjaniyaPrompt(newsText, category, anjAccent, reporter, !!finalImageB64, imageInstruction);
+        outputAnjaniya = await generateCard(anjPrompt, finalImageB64, finalImageMime);
+        renderInFrame("frame-anj", outputAnjaniya);
+        document.getElementById("info-anj").textContent = "Card ready ✓";
+        document.getElementById("open-anj").disabled = false;
+        document.getElementById("dl-anj").disabled = false;
+        setStep("step-anj", "done");
+      } catch (e) {
+        document.getElementById("info-anj").textContent = "Error: " + e.message;
+        setStep("step-anj", "");
+        console.error("Anjaniya card error:", e);
       }
 
-      if (!apiKey) showModal();
-      else hideModal();
-
-      saveKeyBtn.addEventListener("click", () => {
-        const v = apiInput.value.trim();
-        if (!v) {
-          alert("Please enter a valid API key.");
-          return;
-        }
-        apiKey = v;
-        localStorage.setItem("gemini_api_key", v);
-        hideModal();
-      });
-      changeKeyBtn.addEventListener("click", showModal);
-      apiInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") saveKeyBtn.click();
-      });
-
-      // ── IMAGE HANDLING ──────────────────────────────────────────
-      let imageBase64 = null;
-      let imageMime = null;
-
-      const imgInput = document.getElementById("img-input");
-      const imgPreview = document.getElementById("img-preview");
-      const uploadZone = document.getElementById("upload-zone");
-
-      imgInput.addEventListener("change", () => {
-        const file = imgInput.files[0];
-        if (!file) return;
-        imageMime = file.type || "image/jpeg";
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          imageBase64 = e.target.result.split(",")[1];
-          imgPreview.src = e.target.result;
-          imgPreview.style.display = "block";
-          uploadZone.classList.add("has-img");
-          uploadZone.querySelector("p").textContent = file.name;
-        };
-        reader.readAsDataURL(file);
-      });
-
-      // ── PROMPT PREVIEW ──────────────────────────────────────────
-      const showPromptCb = document.getElementById("show-prompt");
-      const promptBox = document.getElementById("prompt-box");
-
-      function buildPrompt() {
-        const cat = document.getElementById("category").value;
-        const accent = ACCENT_MAP[cat] || "#c4390a";
-        const text =
-          document.getElementById("news-text").value.trim() ||
-          "[no text provided]";
-        const rep =
-          document.getElementById("reporter").value.trim() || "#gajendra 2.O";
-        const hasImg = imageBase64 ? "true" : "false";
-        return FIXED_PROMPT_TEMPLATE.replace(/\{\{CATEGORY\}\}/g, cat)
-          .replace(/\{\{ACCENT_COLOR\}\}/g, accent)
-          .replace(/\{\{NEWS_TEXT\}\}/g, text)
-          .replace(/\{\{REPORTER\}\}/g, rep)
-          .replace(/\{\{HAS_IMAGE\}\}/g, hasImg);
+      setStep("step-man", "active");
+      setStatus("⚙ Generating mandla.in card…", "info");
+      document.getElementById("info-man").textContent = "Generating…";
+      try {
+        // FIX: pass correct mandla accent, not anjaniya accent
+        const manPrompt = getMandlaPrompt(newsText, category, manAccent, reporter, !!finalImageB64, imageInstruction);
+        outputMandla = await generateCard(manPrompt, finalImageB64, finalImageMime);
+        renderInFrame("frame-man", outputMandla);
+        document.getElementById("info-man").textContent = "Card ready ✓";
+        document.getElementById("open-man").disabled = false;
+        document.getElementById("dl-man").disabled = false;
+        setStep("step-man", "done");
+      } catch (e) {
+        document.getElementById("info-man").textContent = "Error: " + e.message;
+        setStep("step-man", "");
+        console.error("Mandla card error:", e);
       }
 
-      showPromptCb.addEventListener("change", () => {
-        promptBox.style.display = showPromptCb.checked ? "block" : "none";
-        if (showPromptCb.checked) promptBox.textContent = buildPrompt();
-      });
+      setStatus("✅ Both cards generated!", "ok");
+    }
 
-      // ── OUTPUT STATE ────────────────────────────────────────────
-      let generatedHTML = "";
+  } catch (e) {
+    setStatus("❌ Error: " + e.message, "err");
+    console.error(e);
+  } finally {
+    genBtn.disabled = false;
+    document.getElementById("spinner").style.display = "none";
+    document.getElementById("btn-label").textContent = currentBrand === "both" ? "GENERATE BOTH →" : "GENERATE CARD →";
+  }
+}
 
-      const openTabBtn = document.getElementById("open-tab-btn");
-      const copyHtmlBtn = document.getElementById("copy-html-btn");
-      const downloadBtn = document.getElementById("download-btn");
-      const toolbarInfo = document.getElementById("toolbar-info");
-      const previewFrame = document.getElementById("preview-frame");
-
-      function setOutputReady(html) {
-        generatedHTML = html;
-        toolbarInfo.textContent = "Card generated ✓ — preview below";
-        openTabBtn.disabled = false;
-        copyHtmlBtn.disabled = false;
-        downloadBtn.disabled = false;
-
-        // Render in iframe
-        previewFrame.innerHTML = "";
-        const iframe = document.createElement("iframe");
-        iframe.id = "render-iframe";
-        iframe.style.cssText =
-          "width:100%;height:100%;border:none;border-radius:8px;";
-        previewFrame.appendChild(iframe);
-
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        doc.write(html);
-        doc.close();
-      }
-
-      openTabBtn.addEventListener("click", () => {
-        if (!generatedHTML) return;
-        const w = window.open("", "_blank");
-        w.document.open();
-        w.document.write(generatedHTML);
-        w.document.close();
-      });
-
-      copyHtmlBtn.addEventListener("click", async () => {
-        if (!generatedHTML) return;
-        await navigator.clipboard.writeText(generatedHTML);
-        copyHtmlBtn.textContent = "✓ Copied!";
-        setTimeout(() => {
-          copyHtmlBtn.textContent = "⎘ Copy HTML";
-        }, 2000);
-      });
-
-      downloadBtn.addEventListener("click", () => {
-        if (!generatedHTML) return;
-        const a = document.createElement("a");
-        a.href =
-          "data:text/html;charset=utf-8," + encodeURIComponent(generatedHTML);
-        a.download = "anjaniya-card-" + Date.now() + ".html";
-        a.click();
-      });
-
-      // ── STATUS HELPERS ──────────────────────────────────────────
-      const statusEl = document.getElementById("status");
-      function setStatus(msg, type) {
-        statusEl.textContent = msg;
-        statusEl.className = type;
-        statusEl.style.display = msg ? "block" : "none";
-      }
-
-      // ── GENERATE ────────────────────────────────────────────────
-      const genBtn = document.getElementById("gen-btn");
-      const spinner = document.getElementById("spinner");
-      const btnLabel = document.getElementById("btn-label");
-
-      genBtn.addEventListener("click", generate);
-
-      async function generate() {
-        if (!apiKey) {
-          showModal();
-          return;
-        }
-        const newsText = document.getElementById("news-text").value.trim();
-        if (!newsText && !imageBase64) {
-          setStatus("Please enter news text or upload an image.", "err");
-          return;
-        }
-
-        // UI state: loading
-        genBtn.disabled = true;
-        spinner.style.display = "block";
-        btnLabel.textContent = "Generating…";
-        setStatus("Sending to Gemini API…", "ok");
-
-        try {
-          const prompt = buildPrompt();
-
-          // build message content
-          const content = [];
-
-          // If image provided, add it
-          if (imageBase64) {
-            content.push({
-              inline_data: { mime_type: imageMime, data: imageBase64 },
-            });
-          }
-          content.push({ text: prompt });
-
-          // Gemini API call
-          const MODEL = "gemini-2.5-flash"; // Active stable model per current Gemini docs
-          const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`;
-
-          const body = {
-            contents: [{ role: "user", parts: content }],
-            generationConfig: {
-              temperature: 0.4,
-              maxOutputTokens: 8192,
-            },
-          };
-
-          const res = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err?.error?.message || `HTTP ${res.status}`);
-          }
-
-          const data = await res.json();
-          let raw =
-            data?.candidates?.[0]?.content?.parts
-              ?.map((part) => part?.text || "")
-              .join("\n")
-              .trim() || "";
-
-          // Strip markdown fences if Gemini wrapped it
-          raw = raw
-            .replace(/^```html\s*/i, "")
-            .replace(/^```\s*/i, "")
-            .replace(/```\s*$/, "")
-            .trim();
-
-          if (!raw || !raw.includes("<html")) {
-            throw new Error(
-              "Gemini returned unexpected output. Try again or adjust the prompt.",
-            );
-          }
-
-          setOutputReady(raw);
-          setStatus("✓ Card generated successfully!", "ok");
-        } catch (e) {
-          setStatus("Error: " + e.message, "err");
-          console.error(e);
-        } finally {
-          genBtn.disabled = false;
-          spinner.style.display = "none";
-          btnLabel.textContent = "GENERATE CARD →";
-        }
-      }
-    </script>
-  </body>
+// Init
+initPreviewArea();
+</script>
+</body>
 </html>
